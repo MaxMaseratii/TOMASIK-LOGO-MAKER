@@ -1,1 +1,226 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Oriel — Logo Sizer & Asset Pack Generator</title>
+  <meta name="description" content="Upload a logo and download a complete client package: cropped, scaled, recolored, and organized for digital and print." />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,500;0,9..144,560;1,9..144,500&family=IBM+Plex+Mono:wght@400;500&family=Outfit:wght@360;460;560&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="styles.css" />
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect x='4' y='4' width='24' height='24' fill='none' stroke='%231b1814' stroke-width='2'/%3E%3Crect x='11' y='11' width='10' height='10' fill='%23b5522a'/%3E%3C/svg%3E" />
+</head>
+<body>
+  <div class="wrap">
+    <header class="site">
+      <a class="brand" href="#studio">
+        <div class="mark" aria-hidden="true"><span></span></div>
+        <div>
+          <b>Oriel</b>
+          <small>Pack studio</small>
+        </div>
+      </a>
+      <nav class="nav">
+        <a href="#studio">Generator</a>
+        <a href="#inside">What’s inside</a>
+        <a href="#limits">File notes</a>
+      </nav>
+      <div class="pill">Runs in your browser</div>
+    </header>
 
+    <section class="hero">
+      <div>
+        <p class="kicker">Logo sizer & asset pack generator</p>
+        <h1>Every version,<br />one <em>zip</em>.</h1>
+        <p class="lede">Upload the logo you already made. Oriel crops it to the artwork, builds full-colour, inverse, black, and white versions, then scales and sorts them into a client-ready package for screens and print.</p>
+      </div>
+      <div class="hero-note">
+        <strong>Nothing is uploaded.</strong>
+        Cropping, recoloring, PDF guide, and the zip are made on this device. Drop original AI, EPS, or SVG files into the source slot if you want them copied into the pack untouched.
+      </div>
+    </section>
+
+    <section class="studio" id="studio">
+      <aside class="panel">
+        <div class="panel-head">
+          <h2>Identity</h2>
+          <p class="hint">Used for file names, the guide, and the social plates.</p>
+        </div>
+        <div class="block">
+          <label class="field">
+            <span>Brand name</span>
+            <input id="brandName" type="text" value="Northline" maxlength="48" />
+          </label>
+          <label class="field">
+            <span>Primary colour</span>
+            <div class="color-row">
+              <input id="brandColor" type="color" value="#1f3b31" />
+              <input id="brandHex" type="text" value="#1f3b31" maxlength="7" />
+            </div>
+          </label>
+          <label class="field">
+            <span>Clear space <b id="clearLabel">8%</b></span>
+            <input id="clearSpace" type="range" min="0" max="20" value="8" />
+          </label>
+          <label class="check">
+            <input id="keyWhite" type="checkbox" />
+            <span>Lift a near-white background so PNG files stay transparent.</span>
+          </label>
+          <label class="field">
+            <span>JPG background</span>
+            <select id="jpgBg">
+              <option value="white">White</option>
+              <option value="black">Black</option>
+              <option value="brand">Primary colour</option>
+            </select>
+          </label>
+          <label class="check">
+            <input id="includeSocial" type="checkbox" checked />
+            <span>Include favicons, app icons, and social plates.</span>
+          </label>
+          <label class="check">
+            <input id="includePrint" type="checkbox" checked />
+            <span>Include print PDFs with CMYK notes and a Pantone folder.</span>
+          </label>
+          <label class="check">
+            <input id="include4k" type="checkbox" checked />
+            <span>Include a 3840px master PNG for 4K screens.</span>
+          </label>
+        </div>
+
+        <div class="block">
+          <h2>Artwork</h2>
+          <p class="hint">Primary is required. Horizontal, brandmark, and wordmark are optional lockups — Oriel will not invent a new layout from a single file.</p>
+          <label class="field">
+            <span>Primary logo <i class="req">Required</i></span>
+            <div class="drop" data-slot="primary">
+              <div class="ph">PNG</div>
+              <div><b>Drop primary logo</b><p>PNG, JPG, WEBP, or SVG</p></div>
+              <input type="file" accept="image/png,image/jpeg,image/webp,image/svg+xml,.png,.jpg,.jpeg,.webp,.svg" />
+            </div>
+          </label>
+          <label class="field">
+            <span>Horizontal</span>
+            <div class="drop" data-slot="horizontal">
+              <div class="ph">OPT</div>
+              <div><b>Landscape lockup</b><p>Used for headers and nav</p></div>
+              <input type="file" accept="image/png,image/jpeg,image/webp,image/svg+xml,.png,.jpg,.jpeg,.webp,.svg" />
+            </div>
+          </label>
+          <label class="field">
+            <span>Brandmark / icon</span>
+            <div class="drop" data-slot="icon">
+              <div class="ph">OPT</div>
+              <div><b>Symbol only</b><p>Favicons use this if supplied</p></div>
+              <input type="file" accept="image/png,image/jpeg,image/webp,image/svg+xml,.png,.jpg,.jpeg,.webp,.svg" />
+            </div>
+          </label>
+          <label class="field">
+            <span>Wordmark</span>
+            <div class="drop" data-slot="wordmark">
+              <div class="ph">OPT</div>
+              <div><b>Type only</b><p>For tight horizontal spaces</p></div>
+              <input type="file" accept="image/png,image/jpeg,image/webp,image/svg+xml,.png,.jpg,.jpeg,.webp,.svg" />
+            </div>
+          </label>
+          <label class="field">
+            <span>Original vectors</span>
+            <div class="drop" data-slot="sources">
+              <div class="ph">AI</div>
+              <div><b>AI, EPS, SVG, PDF</b><p>Copied into 00 Source Files</p></div>
+              <input type="file" multiple accept=".ai,.eps,.svg,.pdf,application/pdf,image/svg+xml" />
+            </div>
+          </label>
+        </div>
+      </aside>
+
+      <div class="panel stage">
+        <h2>Stage</h2>
+        <p class="hint" id="stageHint">The crop follows opaque pixels, then adds the clear-space margin before scaling.</p>
+        <div class="frame" id="frame">
+          <div class="empty-stage" id="emptyStage">
+            <strong>Waiting for a mark.</strong>
+            Drop a logo on the left. You’ll see the crop, the four colourways, and the folder map before anything downloads.
+          </div>
+          <img id="masterPreview" alt="" hidden />
+        </div>
+        <div class="variants" id="variants" hidden>
+          <div class="variant light"><img alt="Full colour" /><span>Full colour</span></div>
+          <div class="variant dark"><img alt="Inverse" /><span>Inverse</span></div>
+          <div class="variant light"><img alt="Black" /><span>Black</span></div>
+          <div class="variant dark"><img alt="White" /><span>White</span></div>
+        </div>
+        <div class="meta-row" id="metaRow" hidden></div>
+        <div class="tree" id="tree" aria-label="Package map"></div>
+        <div class="actions">
+          <button class="primary" id="generate" disabled>Build logo package</button>
+          <button class="ghost" id="reset" type="button">Reset</button>
+        </div>
+        <div class="progress" id="progress">
+          <div class="bar"><div id="barFill"></div></div>
+          <p id="progressLabel">Preparing files…</p>
+        </div>
+        <div class="result" id="result"></div>
+      </div>
+    </section>
+
+    <section class="explain" id="inside">
+      <p class="kicker">Package anatomy</p>
+      <h2>What the zip is for.</h2>
+      <p class="lede">A logo package is the organized set of versions, colourways, and formats so the mark stays sharp on a stamp, a screen, or a billboard. Oriel follows a client-friendly folder order: variation, then purpose, then colour, then file type.</p>
+      <div class="grid-3">
+        <article class="card">
+          <h3>Variations</h3>
+          <p>One drawing rarely covers every placement. Supply the lockups you actually designed.</p>
+          <ul>
+            <li>Primary — the main logo</li>
+            <li>Horizontal — headers and web nav</li>
+            <li>Brandmark — symbol for avatars and swag</li>
+            <li>Wordmark — type when the icon is too small</li>
+          </ul>
+        </article>
+        <article class="card">
+          <h3>Colourways</h3>
+          <p>Full colour is not enough. The pack always builds four treatments from each uploaded lockup.</p>
+          <ul>
+            <li>Full colour on light grounds</li>
+            <li>Inverse — colour-reversed for dark grounds</li>
+            <li>Solid black for one-colour print</li>
+            <li>Solid white knockout for dark or photo grounds</li>
+          </ul>
+        </article>
+        <article class="card">
+          <h3>Formats</h3>
+          <p>Raster files are pixels. Vector files are paths. Both belong in the handoff, for different jobs.</p>
+          <ul>
+            <li>PNG — transparency, web, social</li>
+            <li>JPG — flat previews, no transparency</li>
+            <li>SVG & PDF — placement files that scale</li>
+            <li>AI & EPS — only if you drop the originals</li>
+          </ul>
+        </article>
+      </div>
+      <div class="grid-2" id="limits">
+        <article class="card">
+          <h3>Digital and print folders</h3>
+          <p class="path">01 Digital / 02 Print</p>
+          <p>Digital holds RGB images and placement vectors: PNG, JPG, SVG, and PDF. Print holds PDF artwork plus a colour note. CMYK values are process approximations from the uploaded pixels. The Pantone folder explains spot colour and lists those approximations — it does not invent a Pantone code.</p>
+        </article>
+        <article class="card">
+          <h3>Sizes included</h3>
+          <p>Longest edge at 512, 1024, and 1920, plus a 3840 master when enabled. Favicons at 16–512, Apple touch 180, Android 192/512, and plates for X, LinkedIn, YouTube, Instagram, and a 1200×630 link card. A PDF file guide sits at the root of the zip.</p>
+        </article>
+      </div>
+    </section>
+
+    <footer>
+      <div>Oriel pack studio · files stay on this device</div>
+      <div>RGB for screens · CMYK notes for press</div>
+    </footer>
+  </div>
+  <script src="vendor/jszip.min.js"></script>
+  <script src="vendor/jspdf.umd.min.js"></script>
+  <script src="app.js"></script>
+</body>
+</html>
