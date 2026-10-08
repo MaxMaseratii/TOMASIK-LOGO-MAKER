@@ -75,12 +75,7 @@
     .stage { padding: 16px; }
     .frame {
       position: relative; min-height: 260px; border-radius: 14px; display: grid; place-items: center; padding: 28px;
-      background:
-        linear-gradient(45deg, #1e293b 25%, transparent 25%),
-        linear-gradient(-45deg, #1e293b 25%, transparent 25%),
-        linear-gradient(45deg, transparent 75%, #1e293b 75%),
-        linear-gradient(-45deg, transparent 75%, #1e293b 75%);
-      background-size: 18px 18px; background-position: 0 0, 0 9px, 9px -9px, -9px 0; background-color: #0b1220;
+      background: #0b1220;
     }
     .frame:before, .frame:after { content: ""; position: absolute; width: 16px; height: 16px; border-color: #e2e8f0; border-style: solid; }
     .frame:before { top: 10px; left: 10px; border-width: 1.5px 0 0 1.5px; }
@@ -91,18 +86,8 @@
     .grid { display: none; grid-template-columns: repeat(4, 1fr); gap: 8px; margin-top: 10px; }
     .grid.show { display: grid; }
     .card { border: 1px solid var(--line); border-radius: 12px; overflow: hidden; background: #0b1220; }
-    .card .view {
-      height: 108px; display: grid; place-items: center;
-      background-color: #0b1220;
-      background-image:
-        linear-gradient(45deg, rgba(148,163,184,.18) 25%, transparent 25%),
-        linear-gradient(-45deg, rgba(148,163,184,.18) 25%, transparent 25%),
-        linear-gradient(45deg, transparent 75%, rgba(148,163,184,.18) 75%),
-        linear-gradient(-45deg, transparent 75%, rgba(148,163,184,.18) 75%);
-      background-size: 14px 14px;
-      background-position: 0 0, 0 7px, 7px -7px, -7px 0;
-    }
-    .card .view.dark { background-color: #020617; }
+    .card .view { height: 118px; display: grid; place-items: center; background: #111827; }
+    .card .view.dark { background: #020617; }
     .card img { max-width: 84%; max-height: 84px; }
     .card p { margin: 0; padding: 8px 8px 10px; font-size: 11px; color: #cbd5e1; }
     .card b { display: block; color: white; font-weight: 500; }
@@ -138,7 +123,7 @@
         <div class="block">
           <h2>Identity</h2>
           <label class="field"><span>Brand name</span><input id="brand" type="text" placeholder="Northline" maxlength="48" /></label>
-          <p class="hint">Background is lifted so black, white, and custom files stay transparent. The favicon is cropped to the symbol; letters sitting outside it are dropped. Letters inside the mark stay.</p>
+          <p class="hint">Fake checkerboards and export banners in the upload are removed. Black, white, and custom files are the logo only, on a clear background. The favicon keeps the symbol, including type inside it, and drops lettering outside it.</p>
           <label class="field">
             <span>Custom utility colour</span>
             <div class="color-row">
@@ -183,7 +168,7 @@
 
       <div class="panel stage">
         <h2>Stage</h2>
-        <p class="hint">Black and white are the logo itself on a clear background, not a filled square. The favicon card is the extracted symbol.</p>
+        <p class="hint">Clean plate. No checker grain, no caption bar, no type added by the tool.</p>
         <div class="frame">
           <div class="empty" id="empty"><strong>Waiting for a mark.</strong>Drop the logo you already made. Add a symbol without type if the favicon should not include the word.</div>
           <img id="master" alt="" hidden />
@@ -245,6 +230,67 @@
       canvas.width = Math.max(1, Math.round(img.width * scale));
       canvas.height = Math.max(1, Math.round(img.height * scale));
       canvas.getContext("2d").drawImage(img, 0, 0, canvas.width, canvas.height);
+      return canvas;
+    }
+    function neutral(r, g, b) { return Math.max(r, g, b) - Math.min(r, g, b) < 22; }
+    function removeCheckerAndBanner(canvas) {
+      const ctx = canvas.getContext("2d", { willReadFrequently: true });
+      const { width, height } = canvas;
+      const image = ctx.getImageData(0, 0, width, height);
+      const d = image.data;
+      const samples = [];
+      const step = 3;
+      for (let y = 0; y < Math.min(height, 180); y += step) {
+        for (let x = 0; x < Math.min(width, 220); x += step) {
+          const i = (y * width + x) * 4;
+          const r = d[i], g = d[i + 1], b = d[i + 2];
+          if (d[i + 3] < 200 || !neutral(r, g, b) || r < 168) continue;
+          samples.push(r + g + b);
+        }
+      }
+      if (samples.length > 30) {
+        samples.sort((a, b) => a - b);
+        const mid = samples[samples.length >> 1];
+        const low = samples.filter((v) => v < mid);
+        const high = samples.filter((v) => v >= mid);
+        const mean = (arr) => arr.reduce((s, v) => s + v, 0) / arr.length / 3;
+        const c1 = mean(low.length ? low : samples);
+        const c2 = mean(high.length ? high : samples);
+        const near = (r, g, b, c) => neutral(r, g, b) && Math.abs((r + g + b) / 3 - c) < 16;
+        for (let i = 0; i < d.length; i += 4) {
+          if (near(d[i], d[i + 1], d[i + 2], c1) || near(d[i], d[i + 1], d[i + 2], c2)) d[i + 3] = 0;
+        }
+        ctx.putImageData(image, 0, 0);
+      }
+      const rows = [];
+      const data = ctx.getImageData(0, 0, width, height).data;
+      for (let y = 0; y < height; y++) {
+        let n = 0, dark = 0, seen = 0;
+        for (let x = 0; x < width; x += 3) {
+          const i = (y * width + x) * 4;
+          seen++;
+          if (data[i + 3] > 40) {
+            n++;
+            if (data[i] < 70 && data[i + 1] < 80 && data[i + 2] < 100) dark++;
+          }
+        }
+        rows.push({ n: n / seen, dark: dark / Math.max(1, n) });
+      }
+      let y = 0;
+      while (y < height && rows[y].n < 0.04) y++;
+      const start = y;
+      while (y < height && rows[y].n >= 0.04) y++;
+      const end = y;
+      let gap = 0;
+      while (y + gap < height && rows[y + gap].n < 0.03) gap++;
+      const bandDark = rows.slice(start, end).reduce((s, r) => s + r.dark, 0) / Math.max(1, end - start);
+      if (end > start && end - start < height * 0.2 && gap > 8 && bandDark > 0.35) {
+        const out = document.createElement("canvas");
+        out.width = width;
+        out.height = height - end;
+        out.getContext("2d").drawImage(canvas, 0, end, width, height - end, 0, 0, width, height - end);
+        return out;
+      }
       return canvas;
     }
     function keyBackground(canvas) {
@@ -421,9 +467,9 @@
     }
     async function prepare(url, manualSymbol) {
       const img = await loadImage(url);
-      const base = canvasFrom(img, 1400);
-      keyBackground(base);
-      const trimmed = trimCanvas(base, 0.02);
+      const cleaned = removeCheckerAndBanner(canvasFrom(img, 1400));
+      keyBackground(cleaned);
+      const trimmed = trimCanvas(cleaned, 0.02);
       const symbolCanvas = manualSymbol ? trimCanvas(canvasFrom(await loadImage(manualSymbol), 800), 0.04) : extractSymbol(trimmed);
       keyBackground(symbolCanvas);
       return {
@@ -466,7 +512,7 @@
         img.src = reader.result;
         drop.querySelector("b").textContent = file.name;
         if (!slots.primary) return;
-        status.textContent = "Lifting the background and extracting the symbol…";
+        status.textContent = "Removing checker grain and export bars…";
         slots.prepared = await prepare(slots.primary, slots.symbol);
         status.textContent = slots.symbol ? "Using your symbol file for the favicon." : "Favicon cropped to the symbol. Outside letters removed.";
         refresh();
