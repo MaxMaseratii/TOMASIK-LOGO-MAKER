@@ -70,8 +70,8 @@
     .drop input { position: absolute; inset: 0; opacity: 0; cursor: pointer; }
     .ph, .drop img { width: 64px; height: 64px; object-fit: contain; border-radius: 8px; background: #111827; }
     .ph { display: grid; place-items: center; color: #64748b; font-size: 10px; letter-spacing: 0.08em; }
-    .drop b { display: block; font-size: 14px; }
-    .drop p { margin: 2px 0 0; color: var(--muted); font-size: 12px; }
+    .drop b, .drop p { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; max-width: 100%; }
+    .drop div:last-of-type { min-width: 0; }
     .stage { padding: 16px; }
     .frame {
       position: relative; min-height: 260px; border-radius: 14px; display: grid; place-items: center; padding: 28px;
@@ -82,10 +82,8 @@
     .frame:after { right: 10px; bottom: 10px; border-width: 0 1.5px 1.5px 0; }
     .stage-art { position: relative; display: inline-block; max-width: min(100%, 520px); }
     #master { max-width: 100%; max-height: 280px; display: block; }
-    #cropBox {
-      position: absolute; border: 1.5px solid #f9a8d4; box-shadow: 0 0 0 999px rgba(2, 6, 23, 0.45);
-      cursor: move; touch-action: none;
-    }
+    #cropBox { display: none; position: absolute; border: 1.5px solid #f9a8d4; box-shadow: 0 0 0 999px rgba(2, 6, 23, 0.45); cursor: move; touch-action: none; }
+    .cropping #cropBox { display: block; }
     #cropBox i {
       position: absolute; width: 12px; height: 12px; background: #fff; border: 2px solid #6366f1; border-radius: 2px;
     }
@@ -165,15 +163,7 @@
             <span>Full logo</span>
             <div class="drop" data-slot="primary">
               <div class="ph">PNG</div>
-              <div><b>Drop primary logo</b><p>PNG or JPG, letters included</p></div>
-              <input type="file" accept="image/png,image/jpeg,.png,.jpg,.jpeg" />
-            </div>
-          </label>
-          <label class="field">
-            <span>Symbol only · favicon</span>
-            <div class="drop" data-slot="symbol">
-              <div class="ph">ICON</div>
-              <div><b>Drop mark without letters</b><p>Used for the favicon</p></div>
+              <div><b>Drop primary logo</b><p>PNG or JPG</p></div>
               <input type="file" accept="image/png,image/jpeg,.png,.jpg,.jpeg" />
             </div>
           </label>
@@ -193,17 +183,19 @@
           </div>
         </div>
         <div class="cropbar" id="cropbar">
-          <select id="cropTarget">
+          <button type="button" id="openCrop">Crop</button>
+          <select id="cropTarget" hidden>
             <option value="logo">Crop the logo</option>
-            <option value="symbol">Crop the favicon symbol</option>
+            <option value="symbol">Crop the favicon</option>
           </select>
-          <button type="button" id="applyCrop">Save this crop</button>
-          <button type="button" id="clearCrop">Don't crop</button>
+          <button type="button" id="applyCrop" hidden>Save this crop</button>
+          <button type="button" id="clearCrop" hidden>Don't crop</button>
+          <button type="button" id="closeCrop" hidden>Close</button>
         </div>
         <div class="grid" id="grid"></div>
       </div>
     </section>
-    <footer><span>Tomasik Logo Maker Pro</span><span>SVG placement files · JSZip · GitHub Pages</span></footer>
+    <footer><span>Tomasik Logo Maker Pro</span><span>Created by: Bachelin Max Etienne</span></footer>
   </div>
   <script>
     const brand = document.getElementById("brand");
@@ -487,7 +479,7 @@
       const name = fileName(brand.value);
       const art = slots.prepared;
       const logo = art.full;
-      const symbol = slots.symbol || art.symbol;
+      const symbol = art.symbolCropped ? art.symbol : logo;
       const social = slots.symbol && useSymbolSocial.checked ? slots.symbol : art.symbol;
       const inset = Number(pad.value);
       const size = 500 - inset * 2;
@@ -510,8 +502,7 @@
       const cleaned = removeCheckerAndBanner(canvasFrom(img, 1400));
       keyBackground(cleaned);
       const trimmed = trimCanvas(cleaned, 0.02);
-      const symbolCanvas = manualSymbol ? trimCanvas(canvasFrom(await loadImage(manualSymbol), 800), 0.04) : extractSymbol(trimmed);
-      keyBackground(symbolCanvas);
+      const symbolCanvas = trimmed;
       return {
         logoSource: trimmed,
         symbolSource: symbolCanvas,
@@ -559,8 +550,7 @@
       empty.hidden = true;
       stageArt.hidden = false;
       cropbar.classList.add("show");
-      master.src = cropTarget.value === "symbol" ? slots.prepared.logoSource.toDataURL("image/png") : slots.prepared.full;
-      placeCrop();
+      master.src = slots.prepared.full;
       const suite = buildSuite();
       grid.classList.add("show");
       grid.innerHTML = suite.map((item) => {
@@ -613,7 +603,18 @@
       placeCrop();
     });
     cropBox.addEventListener("pointerup", () => { drag = null; });
-    cropTarget.addEventListener("change", () => { if (slots.prepared) refresh(); });
+    document.getElementById("openCrop").addEventListener("click", () => {
+      if (!slots.prepared) return;
+      ["cropTarget", "applyCrop", "clearCrop", "closeCrop"].forEach((id) => document.getElementById(id).hidden = false);
+      stageArt.classList.add("cropping");
+      master.src = cropTarget.value === "symbol" ? slots.prepared.logoSource.toDataURL("image/png") : slots.prepared.full;
+      placeCrop();
+    });
+    document.getElementById("closeCrop").addEventListener("click", () => {
+      ["cropTarget", "applyCrop", "clearCrop", "closeCrop"].forEach((id) => document.getElementById(id).hidden = true);
+      stageArt.classList.remove("cropping");
+      master.src = slots.prepared.full;
+    });
     document.getElementById("applyCrop").addEventListener("click", () => {
       if (!slots.prepared) return;
       if (cropTarget.value === "logo") {
@@ -668,10 +669,11 @@
         }
         img.src = reader.result;
         drop.querySelector("b").textContent = file.name;
+        drop.querySelector("b").title = file.name;
         if (!slots.primary) return;
         status.textContent = "Removing checker grain and export bars…";
         slots.prepared = await prepare(slots.primary, slots.symbol);
-        status.textContent = slots.symbol ? "Using your symbol file for the favicon." : "Favicon cropped to the symbol. Outside letters removed.";
+        status.textContent = "Logo ready. Open Crop if you want to trim the logo or the favicon.";
         refresh();
       };
       reader.readAsDataURL(file);
