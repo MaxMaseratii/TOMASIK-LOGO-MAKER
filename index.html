@@ -80,7 +80,23 @@
     .frame:before, .frame:after { content: ""; position: absolute; width: 16px; height: 16px; border-color: #e2e8f0; border-style: solid; }
     .frame:before { top: 10px; left: 10px; border-width: 1.5px 0 0 1.5px; }
     .frame:after { right: 10px; bottom: 10px; border-width: 0 1.5px 1.5px 0; }
-    #master { max-width: min(100%, 360px); max-height: 210px; }
+    .stage-art { position: relative; display: inline-block; max-width: min(100%, 520px); }
+    #master { max-width: 100%; max-height: 280px; display: block; }
+    #cropBox {
+      position: absolute; border: 1.5px solid #f9a8d4; box-shadow: 0 0 0 999px rgba(2, 6, 23, 0.45);
+      cursor: move; touch-action: none;
+    }
+    #cropBox i {
+      position: absolute; width: 12px; height: 12px; background: #fff; border: 2px solid #6366f1; border-radius: 2px;
+    }
+    #cropBox i[data-h="nw"] { left: -6px; top: -6px; cursor: nwse-resize; }
+    #cropBox i[data-h="ne"] { right: -6px; top: -6px; cursor: nesw-resize; }
+    #cropBox i[data-h="sw"] { left: -6px; bottom: -6px; cursor: nesw-resize; }
+    #cropBox i[data-h="se"] { right: -6px; bottom: -6px; cursor: nwse-resize; }
+    .cropbar { display: none; gap: 8px; align-items: center; margin-top: 10px; flex-wrap: wrap; }
+    .cropbar.show { display: flex; }
+    .cropbar select, .cropbar button { background: #0b1220; color: white; border: 1px solid rgba(148,163,184,.3); border-radius: 10px; padding: 9px 10px; font: inherit; }
+    .cropbar button { cursor: pointer; }
     .empty { text-align: center; color: var(--muted); max-width: 360px; }
     .empty strong { display: block; color: white; font-family: Fraunces, Georgia, serif; font-size: 28px; font-weight: 560; margin-bottom: 6px; }
     .grid { display: none; grid-template-columns: repeat(4, 1fr); gap: 8px; margin-top: 10px; }
@@ -168,10 +184,21 @@
 
       <div class="panel stage">
         <h2>Stage</h2>
-        <p class="hint">Clean plate. No checker grain, no caption bar, no type added by the tool.</p>
-        <div class="frame">
-          <div class="empty" id="empty"><strong>Waiting for a mark.</strong>Drop the logo you already made. Add a symbol without type if the favicon should not include the word.</div>
-          <img id="master" alt="" hidden />
+        <p class="hint">Clean plate. Crop the logo, the favicon, or neither. The crop you save is what gets packed. Black and white keep the drawing, not a flat stamp.</p>
+        <div class="frame" id="frame">
+          <div class="empty" id="empty"><strong>Waiting for a mark.</strong>Drop the logo you already made. Crop it if you want a tighter lockup. Crop the symbol if the favicon should be only that part.</div>
+          <div class="stage-art" id="stageArt" hidden>
+            <img id="master" alt="Artwork to crop" />
+            <div id="cropBox"><i data-h="nw"></i><i data-h="ne"></i><i data-h="sw"></i><i data-h="se"></i></div>
+          </div>
+        </div>
+        <div class="cropbar" id="cropbar">
+          <select id="cropTarget">
+            <option value="logo">Crop the logo</option>
+            <option value="symbol">Crop the favicon symbol</option>
+          </select>
+          <button type="button" id="applyCrop">Save this crop</button>
+          <button type="button" id="clearCrop">Don't crop</button>
         </div>
         <div class="grid" id="grid"></div>
       </div>
@@ -341,7 +368,7 @@
       out.getContext("2d").drawImage(canvas, minX, minY, maxX - minX + 1, maxY - minY + 1, pad, pad, maxX - minX + 1, maxY - minY + 1);
       return out;
     }
-    function recolor(canvas, rgb) {
+    function monoDetail(canvas, mode) {
       const out = document.createElement("canvas");
       out.width = canvas.width;
       out.height = canvas.height;
@@ -349,9 +376,22 @@
       ctx.drawImage(canvas, 0, 0);
       const image = ctx.getImageData(0, 0, out.width, out.height);
       const d = image.data;
+      const lums = [];
       for (let i = 0; i < d.length; i += 4) {
-        if (d[i + 3] < 8) { d[i + 3] = 0; continue; }
-        d[i] = rgb[0]; d[i + 1] = rgb[1]; d[i + 2] = rgb[2];
+        if (d[i + 3] < 12) continue;
+        lums.push(0.2126 * d[i] + 0.7152 * d[i + 1] + 0.0722 * d[i + 2]);
+      }
+      lums.sort((a, b) => a - b);
+      const lo = lums[Math.floor(lums.length * 0.04)] || 0;
+      const hi = lums[Math.floor(lums.length * 0.96)] || 255;
+      const span = Math.max(28, hi - lo);
+      for (let i = 0; i < d.length; i += 4) {
+        if (d[i + 3] < 12) { d[i + 3] = 0; continue; }
+        let l = (0.2126 * d[i] + 0.7152 * d[i + 1] + 0.0722 * d[i + 2] - lo) / span;
+        l = Math.max(0, Math.min(1, l));
+        let v = Math.round(24 + l * 206);
+        if (mode === "white") v = 255 - v;
+        d[i] = d[i + 1] = d[i + 2] = v;
       }
       ctx.putImageData(image, 0, 0);
       return out.toDataURL("image/png");
@@ -457,11 +497,11 @@
         { file: `2_${name}_Horizontal_FullColor.svg`, title: "Horizontal", detail: "800 × 200 navbar", svg: svgDoc("0 0 800 200", logo, 20, 20, 760, 160) },
         { file: `3_${name}_Icon_Tight.svg`, title: "Icon tight", detail: "Symbol, edge to edge", svg: svgDoc("0 0 500 500", symbol, 0, 0, 500, 500) },
         { file: `4_${name}_Social_Profile.svg`, title: "Social", detail: "Symbol inside avatar safe area", svg: svgDoc("0 0 600 600", social, 80, 80, 440, 440) },
-        { file: `5_${name}_Primary_Black_Utility.svg`, title: "Black", detail: "Black logo, transparent", svg: svgDoc("0 0 500 500", art.black, inset, inset, size, size) },
-        { file: `6_${name}_Primary_White_Utility.svg`, title: "White", detail: "White logo, transparent", dark: true, svg: svgDoc("0 0 500 500", art.white, inset, inset, size, size) },
-        { file: `7_${name}_Favicon.svg`, title: "Favicon", detail: "Symbol only, outside type removed", svg: svgDoc("0 0 64 64", symbol, 2, 2, 60, 60) }
+        { file: `5_${name}_Primary_Black_Utility.svg`, title: "Black", detail: "Detail kept, transparent", svg: svgDoc("0 0 500 500", art.black, inset, inset, size, size) },
+        { file: `6_${name}_Primary_White_Utility.svg`, title: "White", detail: "Detail kept, transparent", dark: true, svg: svgDoc("0 0 500 500", art.white, inset, inset, size, size) },
+        { file: `7_${name}_Favicon.svg`, title: "Favicon", detail: art.symbolCropped ? "Your symbol crop" : "Symbol only", svg: svgDoc("0 0 64 64", symbol, 2, 2, 60, 60) }
       ];
-      if (includeTint.checked) files.push({ file: `8_${name}_Primary_Custom_Utility.svg`, title: "Custom", detail: tintColor.hex + " on clear", svg: svgDoc("0 0 500 500", recolor(art.canvas, [tintColor.r, tintColor.g, tintColor.b]), inset, inset, size, size) });
+      if (includeTint.checked) files.push({ file: `8_${name}_Primary_Custom_Utility.svg`, title: "Custom", detail: tintColor.hex + ", detail kept", svg: svgDoc("0 0 500 500", tintDetail(art.canvas, tintColor), inset, inset, size, size) });
       if (includeInverse.checked) files.push({ file: `9_${name}_Primary_Inverse.svg`, title: "Inverse", detail: "Reversed, transparent", dark: true, svg: svgDoc("0 0 500 500", art.inverse, inset, inset, size, size) });
       return files;
     }
@@ -473,20 +513,54 @@
       const symbolCanvas = manualSymbol ? trimCanvas(canvasFrom(await loadImage(manualSymbol), 800), 0.04) : extractSymbol(trimmed);
       keyBackground(symbolCanvas);
       return {
+        logoSource: trimmed,
+        symbolSource: symbolCanvas,
         canvas: trimmed,
         full: trimmed.toDataURL("image/png"),
-        black: recolor(trimmed, [0, 0, 0]),
-        white: recolor(trimmed, [255, 255, 255]),
+        black: monoDetail(trimmed, "black"),
+        white: monoDetail(trimmed, "white"),
         inverse: invert(trimmed),
-        symbol: symbolCanvas.toDataURL("image/png")
+        symbol: symbolCanvas.toDataURL("image/png"),
+        symbolCropped: Boolean(manualSymbol)
       };
+    }
+    function tintDetail(canvas, color) {
+      const out = document.createElement("canvas");
+      out.width = canvas.width;
+      out.height = canvas.height;
+      const ctx = out.getContext("2d", { willReadFrequently: true });
+      ctx.drawImage(canvas, 0, 0);
+      const image = ctx.getImageData(0, 0, out.width, out.height);
+      const d = image.data;
+      for (let i = 0; i < d.length; i += 4) {
+        if (d[i + 3] < 12) { d[i + 3] = 0; continue; }
+        const l = (0.2126 * d[i] + 0.7152 * d[i + 1] + 0.0722 * d[i + 2]) / 255;
+        d[i] = Math.round(color.r * (0.25 + l * 0.75));
+        d[i + 1] = Math.round(color.g * (0.25 + l * 0.75));
+        d[i + 2] = Math.round(color.b * (0.25 + l * 0.75));
+      }
+      ctx.putImageData(image, 0, 0);
+      return out.toDataURL("image/png");
+    }
+    function sliceCanvas(canvas, box) {
+      const x = Math.max(0, Math.round(box.x * canvas.width));
+      const y = Math.max(0, Math.round(box.y * canvas.height));
+      const w = Math.max(1, Math.round(box.w * canvas.width));
+      const h = Math.max(1, Math.round(box.h * canvas.height));
+      const out = document.createElement("canvas");
+      out.width = Math.min(w, canvas.width - x);
+      out.height = Math.min(h, canvas.height - y);
+      out.getContext("2d").drawImage(canvas, x, y, out.width, out.height, 0, 0, out.width, out.height);
+      return out;
     }
     function refresh() {
       padLabel.textContent = pad.value;
       if (!slots.prepared) return;
       empty.hidden = true;
-      master.hidden = false;
-      master.src = slots.prepared.symbol;
+      stageArt.hidden = false;
+      cropbar.classList.add("show");
+      master.src = cropTarget.value === "symbol" ? slots.prepared.logoSource.toDataURL("image/png") : slots.prepared.full;
+      placeCrop();
       const suite = buildSuite();
       grid.classList.add("show");
       grid.innerHTML = suite.map((item) => {
@@ -495,6 +569,89 @@
       }).join("");
       downloadBtn.disabled = false;
     }
+    const stageArt = document.getElementById("stageArt");
+    const cropbar = document.getElementById("cropbar");
+    const cropBox = document.getElementById("cropBox");
+    const cropTarget = document.getElementById("cropTarget");
+    const cropNorm = { x: 0.08, y: 0.08, w: 0.84, h: 0.84 };
+    function placeCrop() {
+      const rect = master.getBoundingClientRect();
+      if (!rect.width) return;
+      cropBox.style.left = (cropNorm.x * rect.width) + "px";
+      cropBox.style.top = (cropNorm.y * rect.height) + "px";
+      cropBox.style.width = (cropNorm.w * rect.width) + "px";
+      cropBox.style.height = (cropNorm.h * rect.height) + "px";
+    }
+    function pointerBox(event) {
+      const rect = master.getBoundingClientRect();
+      return {
+        x: (event.clientX - rect.left) / rect.width,
+        y: (event.clientY - rect.top) / rect.height
+      };
+    }
+    let drag = null;
+    cropBox.addEventListener("pointerdown", (event) => {
+      const handle = event.target.dataset.h || "move";
+      drag = { handle, start: pointerBox(event), box: { ...cropNorm } };
+      cropBox.setPointerCapture(event.pointerId);
+    });
+    cropBox.addEventListener("pointermove", (event) => {
+      if (!drag) return;
+      const p = pointerBox(event);
+      const dx = p.x - drag.start.x;
+      const dy = p.y - drag.start.y;
+      const b = { ...drag.box };
+      if (drag.handle === "move") { b.x += dx; b.y += dy; }
+      if (drag.handle === "se" || drag.handle === "ne") b.w += dx;
+      if (drag.handle === "sw" || drag.handle === "nw") { b.x += dx; b.w -= dx; }
+      if (drag.handle === "se" || drag.handle === "sw") b.h += dy;
+      if (drag.handle === "ne" || drag.handle === "nw") { b.y += dy; b.h -= dy; }
+      b.w = Math.max(0.08, b.w); b.h = Math.max(0.08, b.h);
+      b.x = Math.max(0, Math.min(1 - b.w, b.x));
+      b.y = Math.max(0, Math.min(1 - b.h, b.y));
+      cropNorm.x = b.x; cropNorm.y = b.y; cropNorm.w = b.w; cropNorm.h = b.h;
+      placeCrop();
+    });
+    cropBox.addEventListener("pointerup", () => { drag = null; });
+    cropTarget.addEventListener("change", () => { if (slots.prepared) refresh(); });
+    document.getElementById("applyCrop").addEventListener("click", () => {
+      if (!slots.prepared) return;
+      if (cropTarget.value === "logo") {
+        const cut = sliceCanvas(slots.prepared.logoSource, cropNorm);
+        slots.prepared.canvas = cut;
+        slots.prepared.full = cut.toDataURL("image/png");
+        slots.prepared.black = monoDetail(cut, "black");
+        slots.prepared.white = monoDetail(cut, "white");
+        slots.prepared.inverse = invert(cut);
+        status.textContent = "Logo crop saved. That crop is the logo in the package.";
+      } else {
+        const cut = sliceCanvas(slots.prepared.logoSource, cropNorm);
+        slots.prepared.symbol = cut.toDataURL("image/png");
+        slots.prepared.symbolCropped = true;
+        status.textContent = "Favicon crop saved. That crop is the symbol in the package.";
+      }
+      refresh();
+    });
+    document.getElementById("clearCrop").addEventListener("click", () => {
+      if (!slots.prepared) return;
+      if (cropTarget.value === "logo") {
+        const cut = slots.prepared.logoSource;
+        slots.prepared.canvas = cut;
+        slots.prepared.full = cut.toDataURL("image/png");
+        slots.prepared.black = monoDetail(cut, "black");
+        slots.prepared.white = monoDetail(cut, "white");
+        slots.prepared.inverse = invert(cut);
+        status.textContent = "Logo crop cleared. The full artwork is the logo.";
+      } else {
+        slots.prepared.symbol = slots.prepared.symbolSource.toDataURL("image/png");
+        slots.prepared.symbolCropped = Boolean(slots.symbol);
+        status.textContent = "Favicon crop cleared.";
+      }
+      cropNorm.x = 0.08; cropNorm.y = 0.08; cropNorm.w = 0.84; cropNorm.h = 0.84;
+      refresh();
+    });
+    master.addEventListener("load", placeCrop);
+    window.addEventListener("resize", placeCrop);
     function readSlot(slot, file, drop) {
       if (!file || !/^image\/(png|jpeg)$/.test(file.type)) {
         status.textContent = "Use a PNG or JPG.";
