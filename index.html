@@ -130,6 +130,8 @@
     .sheet h3 { margin: 0 0 8px; }
     .saves { display: grid; gap: 6px; margin-top: 10px; max-height: 220px; overflow: auto; }
     .saves button { text-align: left; }
+    footer { margin-top: 18px; display: flex; justify-content: flex-end; }
+    footer span { color: #64748b; font-size: 10px; }
     @media (max-width: 900px) {
       .studio, .grid { grid-template-columns: 1fr 1fr; }
       .studio { grid-template-columns: 1fr; }
@@ -167,32 +169,32 @@
     <section class="studio">
       <aside class="panel">
         <div class="block">
-          <h2>Identity</h2>
-          <label class="field"><span>Brand name</span><input id="brand" type="text" placeholder="Northline" maxlength="48" /></label>
-          <p class="hint">Fake checkerboards and export banners in the upload are removed. Black, white, and custom files are the logo only, on a clear background. The favicon keeps the symbol, including type inside it, and drops lettering outside it.</p>
+          <h2 data-i18n="identity">Identity</h2>
+          <label class="field"><span data-i18n="brand">Brand name</span><input id="brand" type="text" placeholder="Northline" maxlength="48" /></label>
+          <p class="hint" data-i18n="cleanHint">Fake checkerboards and export banners in the upload are removed. Black, white, and custom files are the logo only, on a clear background. Crop the favicon if it should be the symbol only.</p>
           <label class="field">
-            <span>Custom utility colour</span>
+            <span data-i18n="tintLabel">Custom utility colour</span>
             <div class="color-row">
               <input id="tint" type="color" value="#6366f1" />
               <input id="tintHex" type="text" value="#6366f1" maxlength="7" />
             </div>
           </label>
           <label class="field">
-            <span>White-plate background</span>
+            <span data-i18n="plateLabel">Preview plate</span>
             <div class="color-row">
               <input id="plate" type="color" value="#0f172a" />
               <input id="plateHex" type="text" value="#0f172a" maxlength="7" />
             </div>
           </label>
-          <label class="field"><span>Primary padding <b id="padLabel">50</b></span><input id="pad" type="range" min="24" max="90" value="50" /></label>
-          <label class="check"><input id="useSymbolSocial" type="checkbox" checked /><span>Use the symbol-only file for the social profile too, when it is supplied.</span></label>
-          <label class="check"><input id="includeTint" type="checkbox" checked /><span>Also pack a custom-colour utility SVG.</span></label>
-          <label class="check"><input id="includeInverse" type="checkbox" checked /><span>Also pack an inverse colour SVG.</span></label>
+          <label class="field"><span><span data-i18n="padLabel">Primary padding</span> <b id="padLabel">50</b></span><input id="pad" type="range" min="24" max="90" value="50" /></label>
+          <label class="check"><input id="useSymbolSocial" type="checkbox" checked /><span data-i18n="socialCheck">Use the favicon crop on the social profile too.</span></label>
+          <label class="check"><input id="includeTint" type="checkbox" checked /><span data-i18n="tintCheck">Also pack a custom-colour utility SVG.</span></label>
+          <label class="check"><input id="includeInverse" type="checkbox" checked /><span data-i18n="inverseCheck">Also pack an inverse colour SVG.</span></label>
         </div>
         <div class="block">
-          <h2>Artwork</h2>
+          <h2 data-i18n="artwork">Artwork</h2>
           <label class="field">
-            <span>Full logo</span>
+            <span data-i18n="fullLogo">Full logo</span>
             <div class="drop" data-slot="primary">
               <div class="ph">PNG</div>
               <div class="copy"><b data-i18n="drop">Drop primary logo</b><p data-i18n="dropHint">PNG or JPG</p></div>
@@ -205,29 +207,29 @@
       </aside>
 
       <div class="panel stage">
-        <h2>Stage</h2>
-        <p class="hint">Clean plate. Crop the logo, the favicon, or neither. The crop you save is what gets packed. Black and white keep the drawing, not a flat stamp.</p>
+        <h2 data-i18n="stage">Stage</h2>
+        <p class="hint" data-i18n="stageHint">Clean plate. Crop the logo, the favicon, or neither. The crop you save is what gets packed. Black and white keep the drawing, not a flat stamp.</p>
         <div class="frame" id="frame">
-          <div class="empty" id="empty"><strong>Waiting for a mark.</strong>Drop the logo you already made. Crop it if you want a tighter lockup. Crop the symbol if the favicon should be only that part.</div>
+          <div class="empty" id="empty"><strong data-i18n="waiting">Waiting for a mark.</strong> <span data-i18n="waitingHint">Drop the logo you already made. Open Crop only if you want to trim it.</span></div>
           <div class="stage-art" id="stageArt" hidden>
             <img id="master" alt="Artwork to crop" />
             <div id="cropBox"><i data-h="nw"></i><i data-h="ne"></i><i data-h="sw"></i><i data-h="se"></i></div>
           </div>
         </div>
         <div class="cropbar" id="cropbar">
-          <button type="button" id="openCrop">Crop</button>
+          <button type="button" id="openCrop" data-i18n="crop">Crop</button>
           <select id="cropTarget" hidden>
-            <option value="logo">Crop the logo</option>
-            <option value="symbol">Crop the favicon</option>
+            <option value="logo" data-i18n="cropLogo">Crop the logo</option>
+            <option value="symbol" data-i18n="cropFavicon">Crop the favicon</option>
           </select>
-          <button type="button" id="applyCrop" hidden>Save this crop</button>
-          <button type="button" id="clearCrop" hidden>Don't crop</button>
+          <button type="button" id="applyCrop" hidden data-i18n="saveCrop">Save this crop</button>
+          <button type="button" id="clearCrop" hidden data-i18n="noCrop">Don't crop</button>
           <button type="button" id="closeCrop" hidden>Close</button>
         </div>
         <div class="grid" id="grid"></div>
       </div>
     </section>
-    <footer><span>Tomasik Logo Maker Pro</span><span>Created by: Bachelin Max Etienne</span></footer>
+    <footer><span data-i18n="credit">Created by: Bachelin Max Etienne</span></footer>
     <div class="modal" id="accountModal">
       <form class="sheet" id="accountForm">
         <h3 data-i18n="accountTitle">Account</h3>
@@ -533,16 +535,16 @@
       const size = 500 - inset * 2;
       const tintColor = hexParts(tintHex.value);
       const files = [
-        { file: `1_${name}_Primary_FullColor.svg`, title: "Primary", detail: "Clear background", svg: svgDoc("0 0 500 500", logo, inset, inset, size, size) },
-        { file: `2_${name}_Horizontal_FullColor.svg`, title: "Horizontal", detail: "800 × 200 navbar", svg: svgDoc("0 0 800 200", logo, 20, 20, 760, 160) },
-        { file: `3_${name}_Icon_Tight.svg`, title: "Icon tight", detail: "Symbol, edge to edge", svg: svgDoc("0 0 500 500", symbol, 0, 0, 500, 500) },
-        { file: `4_${name}_Social_Profile.svg`, title: "Social", detail: "Symbol inside avatar safe area", svg: svgDoc("0 0 600 600", social, 80, 80, 440, 440) },
-        { file: `5_${name}_Primary_Black_Utility.svg`, title: "Black", detail: "Detail kept, transparent", svg: svgDoc("0 0 500 500", art.black, inset, inset, size, size) },
-        { file: `6_${name}_Primary_White_Utility.svg`, title: "White", detail: "Detail kept, transparent", dark: true, svg: svgDoc("0 0 500 500", art.white, inset, inset, size, size) },
-        { file: `7_${name}_Favicon.svg`, title: "Favicon", detail: art.symbolCropped ? "Your symbol crop" : "Symbol only", svg: svgDoc("0 0 64 64", symbol, 2, 2, 60, 60) }
+        { file: `1_${name}_Primary_FullColor.svg`, titleKey: "primary", detailKey: "clearBg", svg: svgDoc("0 0 500 500", logo, inset, inset, size, size) },
+        { file: `2_${name}_Horizontal_FullColor.svg`, titleKey: "horizontal", detailKey: "navbar", svg: svgDoc("0 0 800 200", logo, 20, 20, 760, 160) },
+        { file: `3_${name}_Icon_Tight.svg`, titleKey: "icon", detailKey: "edge", svg: svgDoc("0 0 500 500", symbol, 0, 0, 500, 500) },
+        { file: `4_${name}_Social_Profile.svg`, titleKey: "social", detailKey: "avatar", svg: svgDoc("0 0 600 600", social, 80, 80, 440, 440) },
+        { file: `5_${name}_Primary_Black_Utility.svg`, titleKey: "black", detailKey: "detail", svg: svgDoc("0 0 500 500", art.black, inset, inset, size, size) },
+        { file: `6_${name}_Primary_White_Utility.svg`, titleKey: "white", detailKey: "detail", dark: true, svg: svgDoc("0 0 500 500", art.white, inset, inset, size, size) },
+        { file: `7_${name}_Favicon.svg`, titleKey: "favicon", detailKey: art.symbolCropped ? "symbolOnly" : "fullFavicon", svg: svgDoc("0 0 64 64", symbol, 2, 2, 60, 60) }
       ];
-      if (includeTint.checked) files.push({ file: `8_${name}_Primary_Custom_Utility.svg`, title: "Custom", detail: tintColor.hex + ", detail kept", svg: svgDoc("0 0 500 500", tintDetail(art.canvas, tintColor), inset, inset, size, size) });
-      if (includeInverse.checked) files.push({ file: `9_${name}_Primary_Inverse.svg`, title: "Inverse", detail: "Reversed, transparent", dark: true, svg: svgDoc("0 0 500 500", art.inverse, inset, inset, size, size) });
+      if (includeTint.checked) files.push({ file: `8_${name}_Primary_Custom_Utility.svg`, titleKey: "custom", detail: tintColor.hex, svg: svgDoc("0 0 500 500", tintDetail(art.canvas, tintColor), inset, inset, size, size) });
+      if (includeInverse.checked) files.push({ file: `9_${name}_Primary_Inverse.svg`, titleKey: "inverse", detailKey: "detail", dark: true, svg: svgDoc("0 0 500 500", art.inverse, inset, inset, size, size) });
       return files;
     }
     async function prepare(url, manualSymbol) {
@@ -603,7 +605,7 @@
       grid.classList.add("show");
       grid.innerHTML = suite.map((item) => {
         const url = URL.createObjectURL(new Blob([item.svg], { type: "image/svg+xml" }));
-        return `<article class="card"><div class="view${item.dark ? " dark" : ""}"><img src="${url}" alt="${item.title}"></div><p><b>${item.title}</b>${item.detail}</p></article>`;
+        return `<article class="card"><div class="view${item.dark ? " dark" : ""}"><img src="${url}" alt=""></div><p><b>${t(item.titleKey)}</b>${item.detail || t(item.detailKey)}</p></article>`;
       }).join("");
       downloadBtn.disabled = false;
     }
@@ -741,20 +743,25 @@
     bindColor(tint, tintHex);
     bindColor(plate, plateHex);
     const I18N = {
-      en: { lede: "A private converter that runs in your browser. Drop the logo you already made. Crop the full lockup or the favicon only if you want to. Colour, plate, and padding stay under your control. The brand name only names the download.", theme: "Light", account: "Account", pill: "Stays in this browser", drop: "Drop primary logo", dropHint: "PNG or JPG", accountTitle: "Account", accountHint: "Create an account to keep logo setups on this browser. Nothing is sent to a server.", email: "Email", password: "Password", login: "Log in", create: "Create account", save: "Save this logo", logout: "Log out", close: "Close", download: "Download logo package" },
-      ht: { lede: "Yon konvètisè prive ki travay nan navigatè w la. Lage logo ou deja fè a. Koupe logo konplè a oswa favicon an sèlman si ou vle. Koulè, plak, ak espas rete anba kontwòl ou. Non mak la sèvi sèlman pou non fichye a.", theme: "Klè", account: "Kont", pill: "Rete nan navigatè sa a", drop: "Lage logo prensipal la", dropHint: "PNG oswa JPG", accountTitle: "Kont", accountHint: "Kreye yon kont pou sove logo yo sou navigatè sa a. Anyen pa ale sou yon sèvè.", email: "Imèl", password: "Modpas", login: "Konekte", create: "Kreye kont", save: "Sove logo sa a", logout: "Dekonekte", close: "Fèmen", download: "Telechaje pake logo a" },
-      fr: { lede: "Un convertisseur privé qui tourne dans votre navigateur. Déposez le logo déjà créé. Recadrez le logo complet ou le favicon seulement si vous le souhaitez. Couleur, fond et marges restent sous votre contrôle. Le nom de marque sert uniquement au fichier.", theme: "Clair", account: "Compte", pill: "Reste dans ce navigateur", drop: "Déposer le logo", dropHint: "PNG ou JPG", accountTitle: "Compte", accountHint: "Créez un compte pour garder vos logos dans ce navigateur. Rien n'est envoyé à un serveur.", email: "E-mail", password: "Mot de passe", login: "Connexion", create: "Créer un compte", save: "Enregistrer ce logo", logout: "Déconnexion", close: "Fermer", download: "Télécharger le pack" },
-      es: { lede: "Un convertidor privado que funciona en su navegador. Suelte el logo que ya creó. Recorte el logo completo o el favicon solo si lo desea. Color, placa y margen siguen bajo su control. El nombre de marca solo nombra la descarga.", theme: "Claro", account: "Cuenta", pill: "Se queda en este navegador", drop: "Soltar el logo", dropHint: "PNG o JPG", accountTitle: "Cuenta", accountHint: "Cree una cuenta para guardar logos en este navegador. Nada se envía a un servidor.", email: "Correo", password: "Contraseña", login: "Entrar", create: "Crear cuenta", save: "Guardar este logo", logout: "Salir", close: "Cerrar", download: "Descargar el paquete" },
-      pt: { lede: "Um conversor privado que corre no seu navegador. Largue o logo que já fez. Recorte o logo completo ou o favicon só se quiser. Cor, fundo e margem ficam sob o seu controlo. O nome da marca só nomeia o ficheiro.", theme: "Claro", account: "Conta", pill: "Fica neste navegador", drop: "Largar o logo", dropHint: "PNG ou JPG", accountTitle: "Conta", accountHint: "Crie uma conta para guardar logos neste navegador. Nada é enviado a um servidor.", email: "E-mail", password: "Palavra-passe", login: "Entrar", create: "Criar conta", save: "Guardar este logo", logout: "Sair", close: "Fechar", download: "Descarregar o pacote" },
-      de: { lede: "Ein privater Konverter im Browser. Legen Sie das fertige Logo ab. Schneiden Sie das ganze Logo oder nur das Favicon zu, wenn Sie möchten. Farbe, Fläche und Abstand bleiben bei Ihnen. Der Markenname benennt nur den Download.", theme: "Hell", account: "Konto", pill: "Bleibt in diesem Browser", drop: "Logo ablegen", dropHint: "PNG oder JPG", accountTitle: "Konto", accountHint: "Legen Sie ein Konto an, um Logos in diesem Browser zu behalten. Nichts geht an einen Server.", email: "E-Mail", password: "Passwort", login: "Anmelden", create: "Konto erstellen", save: "Dieses Logo speichern", logout: "Abmelden", close: "Schliessen", download: "Logo-Paket laden" },
-      ja: { lede: "ブラウザ内だけで動く変換ツールです。完成したロゴを置いてください。必要なときだけ全体またはファビコンを切り抜きます。色、背景、余白は自分で調整します。ブランド名はファイル名だけに使います。", theme: "ライト", account: "アカウント", pill: "このブラウザに残ります", drop: "ロゴをドロップ", dropHint: "PNG または JPG", accountTitle: "アカウント", accountHint: "このブラウザにロゴ設定を残すアカウントです。サーバーには送りません。", email: "メール", password: "パスワード", login: "ログイン", create: "アカウント作成", save: "このロゴを保存", logout: "ログアウト", close: "閉じる", download: "ロゴパッケージを取得" },
-      zh: { lede: "这是在浏览器里运行的专用转换器。放入已经做好的标志。只有在需要时才裁剪整标或网站图标。颜色、底板和边距由你控制。品牌名只用于下载文件名。", theme: "浅色", account: "账户", pill: "只留在此浏览器", drop: "放入主标志", dropHint: "PNG 或 JPG", accountTitle: "账户", accountHint: "创建账户后，标志方案保存在此浏览器。不会发送到服务器。", email: "邮箱", password: "密码", login: "登录", create: "创建账户", save: "保存此标志", logout: "退出", close: "关闭", download: "下载标志包" }
+      en: { lede: "A private converter that runs in your browser. Drop the logo you already made. Crop the full lockup or the favicon only if you want to. Colour, plate, and padding stay under your control. The brand name only names the download.", theme: "Light", account: "Account", pill: "Stays in this browser", drop: "Drop primary logo", dropHint: "PNG or JPG", accountTitle: "Account", accountHint: "Create an account to keep logo setups on this browser. Nothing is sent to a server.", email: "Email", password: "Password", login: "Log in", create: "Create account", save: "Save this logo", logout: "Log out", close: "Close", download: "Download logo package", identity: "Identity", brand: "Brand name", cleanHint: "Fake checkerboards and export banners in the upload are removed. Black, white, and custom files are the logo only, on a clear background. Crop the favicon if it should be the symbol only.", tintLabel: "Custom utility colour", plateLabel: "Preview plate", padLabel: "Primary padding", socialCheck: "Use the favicon crop on the social profile too.", tintCheck: "Also pack a custom-colour utility SVG.", inverseCheck: "Also pack an inverse colour SVG.", artwork: "Artwork", fullLogo: "Full logo", stage: "Stage", stageHint: "Clean plate. Crop the logo, the favicon, or neither. The crop you save is what gets packed. Black and white keep the drawing, not a flat stamp.", waiting: "Waiting for a mark.", waitingHint: "Drop the logo you already made. Open Crop only if you want to trim it.", crop: "Crop", cropLogo: "Crop the logo", cropFavicon: "Crop the favicon", saveCrop: "Save this crop", noCrop: "Don't crop", credit: "Created by: Bachelin Max Etienne", primary: "Primary", horizontal: "Horizontal", icon: "Icon tight", social: "Social", black: "Black", white: "White", favicon: "Favicon", custom: "Custom", inverse: "Inverse", clearBg: "Clear background", navbar: "800 × 200 navbar", edge: "Full mark, edge to edge", avatar: "Inside avatar safe area", detail: "Detail kept, transparent", symbolOnly: "Symbol crop", fullFavicon: "Full logo" },
+      ht: { lede: "Yon konvètisè prive ki travay nan navigatè w la. Lage logo ou deja fè a. Koupe logo konplè a oswa favicon an sèlman si ou vle. Koulè, plak, ak espas rete anba kontwòl ou. Non mak la sèvi sèlman pou non fichye a.", theme: "Klè", account: "Kont", pill: "Rete nan navigatè sa a", drop: "Lage logo prensipal la", dropHint: "PNG oswa JPG", accountTitle: "Kont", accountHint: "Kreye yon kont pou sove logo yo sou navigatè sa a. Anyen pa ale sou yon sèvè.", email: "Imèl", password: "Modpas", login: "Konekte", create: "Kreye kont", save: "Sove logo sa a", logout: "Dekonekte", close: "Fèmen", download: "Telechaje pake logo a", identity: "Idantite", brand: "Non mak", cleanHint: "Damye fo ak banyè ekspò nan fichye a retire. Nwa, blan, ak koulè pèsonalize se logo a sèlman, sou yon fon klè. Koupe favicon an si li dwe senbòl la sèlman.", tintLabel: "Koulè itil pèsonalize", plateLabel: "Plak aperçu", padLabel: "Espas prensipal", socialCheck: "Sèvi ak koupe favicon an pou pwofil sosyal la tou.", tintCheck: "Mete yon SVG koulè pèsonalize tou.", inverseCheck: "Mete yon SVG koulè envèse tou.", artwork: "Atizay", fullLogo: "Logo konplè", stage: "Sèn", stageHint: "Plak pwòp. Koupe logo a, favicon an, oswa ni youn ni lòt. Koupe ou sove a se sa ki nan pake a. Nwa ak blan kenbe desen an.", waiting: "Ap tann yon mak.", waitingHint: "Lage logo ou deja fè a. Louvri Koupe sèlman si ou vle koupe l.", crop: "Koupe", cropLogo: "Koupe logo a", cropFavicon: "Koupe favicon an", saveCrop: "Sove koupe sa a", noCrop: "Pa koupe", credit: "Created by: Bachelin Max Etienne", primary: "Prensipal", horizontal: "Orizontal", icon: "Ikòn sere", social: "Sosyal", black: "Nwa", white: "Blan", favicon: "Favicon", custom: "Pèsonalize", inverse: "Envèse", clearBg: "Fon klè", navbar: "800 × 200 navba", edge: "Mak konplè, bò kote bò", avatar: "Anndan zòn avatar la", detail: "Detay kenbe, transparan", symbolOnly: "Koupe senbòl", fullFavicon: "Logo konplè" },
+      fr: { lede: "Un convertisseur privé qui tourne dans votre navigateur. Déposez le logo déjà créé. Recadrez le logo complet ou le favicon seulement si vous le souhaitez. Couleur, fond et marges restent sous votre contrôle. Le nom de marque sert uniquement au fichier.", theme: "Clair", account: "Compte", pill: "Reste dans ce navigateur", drop: "Déposer le logo", dropHint: "PNG ou JPG", accountTitle: "Compte", accountHint: "Créez un compte pour garder vos logos dans ce navigateur. Rien n'est envoyé à un serveur.", email: "E-mail", password: "Mot de passe", login: "Connexion", create: "Créer un compte", save: "Enregistrer ce logo", logout: "Déconnexion", close: "Fermer", download: "Télécharger le pack", identity: "Identité", brand: "Nom de marque", cleanHint: "Les faux damiers et bannières d'export sont retirés. Noir, blanc et couleur perso sont le logo seul, sur fond transparent. Recadrez le favicon s'il doit être le symbole seul.", tintLabel: "Couleur utilitaire", plateLabel: "Fond d'aperçu", padLabel: "Marge principale", socialCheck: "Utiliser aussi le recadrage favicon pour le profil social.", tintCheck: "Ajouter aussi un SVG de couleur perso.", inverseCheck: "Ajouter aussi un SVG inversé.", artwork: "Visuel", fullLogo: "Logo complet", stage: "Scène", stageHint: "Plateau net. Recadrez le logo, le favicon, ou aucun des deux. Le recadrage enregistré est celui du paquet. Noir et blanc gardent le dessin.", waiting: "En attente d'un logo.", waitingHint: "Déposez le logo déjà créé. Ouvrez Recadrer seulement si vous voulez le rogner.", crop: "Recadrer", cropLogo: "Recadrer le logo", cropFavicon: "Recadrer le favicon", saveCrop: "Enregistrer ce cadre", noCrop: "Ne pas recadrer", credit: "Created by: Bachelin Max Etienne", primary: "Principal", horizontal: "Horizontal", icon: "Icône serrée", social: "Social", black: "Noir", white: "Blanc", favicon: "Favicon", custom: "Perso", inverse: "Inversé", clearBg: "Fond transparent", navbar: "Barre 800 × 200", edge: "Logo entier, bord à bord", avatar: "Dans la zone avatar", detail: "Détail gardé, transparent", symbolOnly: "Cadre symbole", fullFavicon: "Logo complet" },
+      es: { lede: "Un convertidor privado que funciona en su navegador. Suelte el logo que ya creó. Recorte el logo completo o el favicon solo si lo desea. Color, placa y margen siguen bajo su control. El nombre de marca solo nombra la descarga.", theme: "Claro", account: "Cuenta", pill: "Se queda en este navegador", drop: "Soltar el logo", dropHint: "PNG o JPG", accountTitle: "Cuenta", accountHint: "Cree una cuenta para guardar logos en este navegador. Nada se envía a un servidor.", email: "Correo", password: "Contraseña", login: "Entrar", create: "Crear cuenta", save: "Guardar este logo", logout: "Salir", close: "Cerrar", download: "Descargar el paquete", identity: "Identidad", brand: "Nombre de marca", cleanHint: "Se quitan los dameros falsos y las barras de exportación. Negro, blanco y color propio son solo el logo, sobre fondo transparente. Recorte el favicon si debe ser solo el símbolo.", tintLabel: "Color utilitario", plateLabel: "Fondo de vista", padLabel: "Margen principal", socialCheck: "Usar también el recorte del favicon en el perfil social.", tintCheck: "Incluir también un SVG de color propio.", inverseCheck: "Incluir también un SVG invertido.", artwork: "Arte", fullLogo: "Logo completo", stage: "Escena", stageHint: "Placa limpia. Recorte el logo, el favicon, o ninguno. El recorte guardado es el que se empaqueta. Negro y blanco conservan el dibujo.", waiting: "Esperando un logo.", waitingHint: "Suelte el logo que ya creó. Abra Recortar solo si quiere recortarlo.", crop: "Recortar", cropLogo: "Recortar el logo", cropFavicon: "Recortar el favicon", saveCrop: "Guardar este recorte", noCrop: "No recortar", credit: "Created by: Bachelin Max Etienne", primary: "Principal", horizontal: "Horizontal", icon: "Icono ajustado", social: "Social", black: "Negro", white: "Blanco", favicon: "Favicon", custom: "Propio", inverse: "Inverso", clearBg: "Fondo transparente", navbar: "Barra 800 × 200", edge: "Logo completo, de borde a borde", avatar: "Dentro del área de avatar", detail: "Detalle conservado, transparente", symbolOnly: "Recorte del símbolo", fullFavicon: "Logo completo" },
+      pt: { lede: "Um conversor privado que corre no seu navegador. Largue o logo que já fez. Recorte o logo completo ou o favicon só se quiser. Cor, fundo e margem ficam sob o seu controlo. O nome da marca só nomeia o ficheiro.", theme: "Claro", account: "Conta", pill: "Fica neste navegador", drop: "Largar o logo", dropHint: "PNG ou JPG", accountTitle: "Conta", accountHint: "Crie uma conta para guardar logos neste navegador. Nada é enviado a um servidor.", email: "E-mail", password: "Palavra-passe", login: "Entrar", create: "Criar conta", save: "Guardar este logo", logout: "Sair", close: "Fechar", download: "Descarregar o pacote", identity: "Identidade", brand: "Nome da marca", cleanHint: "Xadrez falso e faixas de exportação são removidos. Preto, branco e cor própria são só o logo, em fundo transparente. Recorte o favicon se deve ser só o símbolo.", tintLabel: "Cor utilitária", plateLabel: "Fundo de pré-visualização", padLabel: "Margem principal", socialCheck: "Usar também o recorte do favicon no perfil social.", tintCheck: "Incluir também um SVG de cor própria.", inverseCheck: "Incluir também um SVG invertido.", artwork: "Arte", fullLogo: "Logo completo", stage: "Palco", stageHint: "Placa limpa. Recorte o logo, o favicon, ou nenhum. O recorte guardado é o que entra no pacote. Preto e branco mantêm o desenho.", waiting: "À espera de um logo.", waitingHint: "Largue o logo que já fez. Abra Recortar só se quiser cortá-lo.", crop: "Recortar", cropLogo: "Recortar o logo", cropFavicon: "Recortar o favicon", saveCrop: "Guardar este recorte", noCrop: "Não recortar", credit: "Created by: Bachelin Max Etienne", primary: "Principal", horizontal: "Horizontal", icon: "Ícone justo", social: "Social", black: "Preto", white: "Branco", favicon: "Favicon", custom: "Próprio", inverse: "Inverso", clearBg: "Fundo transparente", navbar: "Barra 800 × 200", edge: "Logo inteiro, de margem a margem", avatar: "Dentro da área do avatar", detail: "Detalhe mantido, transparente", symbolOnly: "Recorte do símbolo", fullFavicon: "Logo completo" },
+      de: { lede: "Ein privater Konverter im Browser. Legen Sie das fertige Logo ab. Schneiden Sie das ganze Logo oder nur das Favicon zu, wenn Sie möchten. Farbe, Fläche und Abstand bleiben bei Ihnen. Der Markenname benennt nur den Download.", theme: "Hell", account: "Konto", pill: "Bleibt in diesem Browser", drop: "Logo ablegen", dropHint: "PNG oder JPG", accountTitle: "Konto", accountHint: "Legen Sie ein Konto an, um Logos in diesem Browser zu behalten. Nichts geht an einen Server.", email: "E-Mail", password: "Passwort", login: "Anmelden", create: "Konto erstellen", save: "Dieses Logo speichern", logout: "Abmelden", close: "Schliessen", download: "Logo-Paket laden", identity: "Identität", brand: "Markenname", cleanHint: "Falsche Schachbretter und Exportleisten werden entfernt. Schwarz, Weiss und eigene Farbe sind nur das Logo, auf klarem Grund. Schneiden Sie das Favicon zu, wenn es nur das Zeichen sein soll.", tintLabel: "Eigene Nutzfarbe", plateLabel: "Vorschaufläche", padLabel: "Hauptabstand", socialCheck: "Favicon-Ausschnitt auch für das Social-Profil nutzen.", tintCheck: "Auch ein SVG in eigener Farbe packen.", inverseCheck: "Auch ein invertiertes SVG packen.", artwork: "Motiv", fullLogo: "Ganzes Logo", stage: "Bühne", stageHint: "Saubere Fläche. Schneiden Sie das Logo, das Favicon oder keins zu. Der gespeicherte Ausschnitt wird gepackt. Schwarz und Weiss behalten die Zeichnung.", waiting: "Wartet auf ein Zeichen.", waitingHint: "Legen Sie das fertige Logo ab. Öffnen Sie Zuschneiden nur, wenn Sie es beschneiden wollen.", crop: "Zuschneiden", cropLogo: "Logo zuschneiden", cropFavicon: "Favicon zuschneiden", saveCrop: "Ausschnitt speichern", noCrop: "Nicht zuschneiden", credit: "Created by: Bachelin Max Etienne", primary: "Primär", horizontal: "Horizontal", icon: "Enges Icon", social: "Social", black: "Schwarz", white: "Weiss", favicon: "Favicon", custom: "Eigene Farbe", inverse: "Invers", clearBg: "Klarer Grund", navbar: "800 × 200 Leiste", edge: "Ganzes Zeichen, randnah", avatar: "In der Avatar-Zone", detail: "Detail bleibt, transparent", symbolOnly: "Zeichenausschnitt", fullFavicon: "Ganzes Logo" },
+      ja: { lede: "ブラウザ内だけで動く変換ツールです。完成したロゴを置いてください。必要なときだけ全体またはファビコンを切り抜きます。色、背景、余白は自分で調整します。ブランド名はファイル名だけに使います。", theme: "ライト", account: "アカウント", pill: "このブラウザに残ります", drop: "ロゴをドロップ", dropHint: "PNG または JPG", accountTitle: "アカウント", accountHint: "このブラウザにロゴ設定を残すアカウントです。サーバーには送りません。", email: "メール", password: "パスワード", login: "ログイン", create: "アカウント作成", save: "このロゴを保存", logout: "ログアウト", close: "閉じる", download: "ロゴパッケージを取得", identity: "識別", brand: "ブランド名", cleanHint: "アップロード内の偽チェッカーと書き出し帯は除去します。黒・白・指定色は透明背景のロゴだけです。ファビコンを記号だけにするときは切り抜いてください。", tintLabel: "指定色", plateLabel: "プレビュー背景", padLabel: "主余白", socialCheck: "ファビコンの切り抜きをソーシャルにも使う。", tintCheck: "指定色のSVGも入れる。", inverseCheck: "反転SVGも入れる。", artwork: "アート", fullLogo: "ロゴ全体", stage: "ステージ", stageHint: "きれいな板。ロゴ、ファビコン、またはどちらも切り抜かない。保存した範囲が書き出されます。黒と白は描画の細部を残します。", waiting: "マークを待っています。", waitingHint: "完成したロゴを置いてください。切り抜きは必要なときだけ開きます。", crop: "切り抜き", cropLogo: "ロゴを切り抜く", cropFavicon: "ファビコンを切り抜く", saveCrop: "この範囲を保存", noCrop: "切り抜かない", credit: "Created by: Bachelin Max Etienne", primary: "基本", horizontal: "横長", icon: "タイトアイコン", social: "ソーシャル", black: "黒", white: "白", favicon: "ファビコン", custom: "指定色", inverse: "反転", clearBg: "透明背景", navbar: "800 × 200 ナビ", edge: "全体、端まで", avatar: "アバター安全域", detail: "細部を保持、透明", symbolOnly: "記号の切り抜き", fullFavicon: "ロゴ全体" },
+      zh: { lede: "这是在浏览器里运行的专用转换器。放入已经做好的标志。只有在需要时才裁剪整标或网站图标。颜色、底板和边距由你控制。品牌名只用于下载文件名。", theme: "浅色", account: "账户", pill: "只留在此浏览器", drop: "放入主标志", dropHint: "PNG 或 JPG", accountTitle: "账户", accountHint: "创建账户后，标志方案保存在此浏览器。不会发送到服务器。", email: "邮箱", password: "密码", login: "登录", create: "创建账户", save: "保存此标志", logout: "退出", close: "关闭", download: "下载标志包", identity: "标识", brand: "品牌名称", cleanHint: "上传图里的假棋盘格和导出横条会被去掉。黑色、白色和自定义色只保留标志，背景透明。如果网站图标只要符号，请裁剪。", tintLabel: "自定义实用色", plateLabel: "预览底板", padLabel: "主边距", socialCheck: "社交头像也使用网站图标裁剪。", tintCheck: "同时打包自定义色 SVG。", inverseCheck: "同时打包反色 SVG。", artwork: "图稿", fullLogo: "完整标志", stage: "舞台", stageHint: "干净底板。可裁剪完整标志、网站图标，或都不裁。保存的裁剪才会打包。黑白版本保留图形细节。", waiting: "等待标志。", waitingHint: "放入已经做好的标志。只有需要裁切时才打开裁剪。", crop: "裁剪", cropLogo: "裁剪标志", cropFavicon: "裁剪网站图标", saveCrop: "保存此裁剪", noCrop: "不裁剪", credit: "Created by: Bachelin Max Etienne", primary: "主标志", horizontal: "横版", icon: "紧凑图标", social: "社交", black: "黑色", white: "白色", favicon: "网站图标", custom: "自定义", inverse: "反色", clearBg: "透明背景", navbar: "800 × 200 导航", edge: "完整标志，贴边", avatar: "头像安全区", detail: "保留细节，透明", symbolOnly: "符号裁剪", fullFavicon: "完整标志" }
     };
+    function t(key) {
+      const pack = I18N[document.getElementById("lang").value] || I18N.en;
+      return pack[key] || I18N.en[key] || key;
+    }
     function applyLang() {
       const pack = I18N[lang.value] || I18N.en;
       document.querySelectorAll("[data-i18n]").forEach((el) => { if (pack[el.dataset.i18n]) el.textContent = pack[el.dataset.i18n]; });
       themeBtn.textContent = document.body.classList.contains("light") ? (pack.theme === "Light" ? "Dark" : pack.theme) : pack.theme;
       document.documentElement.lang = lang.value === "zh" ? "zh" : lang.value;
+      if (slots.prepared) refresh();
     }
     const lang = document.getElementById("lang");
     const themeBtn = document.getElementById("themeBtn");
