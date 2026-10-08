@@ -3,224 +3,313 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Oriel — Logo Sizer & Asset Pack Generator</title>
-  <meta name="description" content="Upload a logo and download a complete client package: cropped, scaled, recolored, and organized for digital and print." />
+  <title>Tomasik Logo Maker Pro</title>
+  <meta name="description" content="Upload a logo and download seven placement SVGs in one zip. Runs entirely in the browser." />
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-  <link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,500;0,9..144,560;1,9..144,500&family=IBM+Plex+Mono:wght@400;500&family=Outfit:wght@360;460;560&display=swap" rel="stylesheet" />
-  <link rel="stylesheet" href="styles.css" />
-  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect x='4' y='4' width='24' height='24' fill='none' stroke='%231b1814' stroke-width='2'/%3E%3Crect x='11' y='11' width='10' height='10' fill='%23b5522a'/%3E%3C/svg%3E" />
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@380;500;640&display=swap" rel="stylesheet" />
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
+  <style>
+    :root {
+      --bg: #0b1120;
+      --slate: #0f172a;
+      --card: #1e293b;
+      --card-2: #243044;
+      --line: rgba(148, 163, 184, 0.22);
+      --text: #f8fafc;
+      --muted: #94a3b8;
+      --indigo: #6366f1;
+      --pink: #ec4899;
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      min-height: 100vh;
+      color: var(--text);
+      font-family: Outfit, "Segoe UI", sans-serif;
+      background:
+        radial-gradient(900px 420px at 0% -10%, rgba(99, 102, 241, 0.35), transparent 55%),
+        radial-gradient(800px 480px at 100% 0%, rgba(236, 72, 153, 0.28), transparent 50%),
+        var(--bg);
+    }
+    .wrap { width: min(1080px, calc(100% - 32px)); margin: 0 auto; padding: 32px 0 56px; }
+    header { display: flex; justify-content: space-between; gap: 16px; align-items: end; margin-bottom: 28px; }
+    .mark {
+      width: 42px; height: 42px; border-radius: 12px;
+      background: linear-gradient(135deg, var(--indigo), var(--pink));
+      display: grid; place-items: center; font-weight: 640;
+    }
+    .brand-row { display: flex; gap: 12px; align-items: center; }
+    h1 { margin: 0; font-size: clamp(28px, 4vw, 42px); letter-spacing: -0.04em; }
+    h1 span {
+      background: linear-gradient(90deg, #a5b4fc, #f9a8d4);
+      -webkit-background-clip: text; background-clip: text; color: transparent;
+    }
+    p.lede { margin: 8px 0 0; color: var(--muted); max-width: 560px; line-height: 1.45; }
+    .pill {
+      border: 1px solid var(--line); border-radius: 999px; padding: 8px 12px;
+      color: #c4b5fd; font-size: 12px; letter-spacing: 0.12em; text-transform: uppercase;
+      background: rgba(15, 23, 42, 0.7);
+    }
+    .panel {
+      background: rgba(15, 23, 42, 0.78);
+      border: 1px solid var(--line);
+      border-radius: 22px;
+      padding: 18px;
+      box-shadow: 0 20px 60px rgba(2, 6, 23, 0.35);
+    }
+    .drop {
+      min-height: 230px;
+      border: 1.5px dashed rgba(165, 180, 252, 0.45);
+      border-radius: 18px;
+      background:
+        linear-gradient(180deg, rgba(99, 102, 241, 0.08), rgba(236, 72, 153, 0.05)),
+        #111827;
+      display: grid;
+      place-items: center;
+      text-align: center;
+      padding: 24px;
+      position: relative;
+      transition: border-color 0.15s ease, transform 0.15s ease;
+    }
+    .drop.over { border-color: #f9a8d4; transform: translateY(-2px); }
+    .drop input { position: absolute; inset: 0; opacity: 0; cursor: pointer; }
+    .drop strong { display: block; font-size: 20px; margin-bottom: 6px; }
+    .drop span { color: var(--muted); }
+    .preview-row { display: none; grid-template-columns: 180px 1fr; gap: 16px; margin-top: 16px; }
+    .preview-row.show { display: grid; }
+    .shot {
+      height: 180px; border-radius: 16px; border: 1px solid var(--line);
+      background:
+        linear-gradient(45deg, #1e293b 25%, transparent 25%),
+        linear-gradient(-45deg, #1e293b 25%, transparent 25%),
+        linear-gradient(45deg, transparent 75%, #1e293b 75%),
+        linear-gradient(-45deg, transparent 75%, #1e293b 75%);
+      background-size: 18px 18px;
+      background-position: 0 0, 0 9px, 9px -9px, -9px 0;
+      background-color: #0f172a;
+      display: grid; place-items: center; padding: 12px;
+    }
+    .shot img { max-width: 100%; max-height: 150px; object-fit: contain; }
+    label { display: block; font-size: 13px; color: #cbd5e1; margin-bottom: 8px; letter-spacing: 0.04em; }
+    input[type="text"] {
+      width: 100%; background: #0f172a; color: white; border: 1px solid var(--line);
+      border-radius: 12px; padding: 14px 14px; font: inherit; font-size: 16px; outline: none;
+    }
+    input[type="text"]:focus { border-color: #818cf8; }
+    .note { color: var(--muted); font-size: 13px; line-height: 1.45; margin: 10px 0 0; }
+    button.download {
+      margin-top: 16px; border: 0; border-radius: 14px; padding: 14px 18px; width: 100%;
+      color: white; font: inherit; font-weight: 640; font-size: 16px; cursor: pointer;
+      background: linear-gradient(90deg, var(--indigo), var(--pink));
+    }
+    button.download:disabled { opacity: 0.45; cursor: not-allowed; }
+    .status { min-height: 22px; margin-top: 10px; color: #c4b5fd; font-size: 14px; }
+    .grid { display: none; grid-template-columns: repeat(4, 1fr); gap: 12px; margin-top: 18px; }
+    .grid.show { display: grid; }
+    .card {
+      background: var(--card); border: 1px solid var(--line); border-radius: 16px; overflow: hidden;
+    }
+    .card .stage { height: 140px; display: grid; place-items: center; background: #0f172a; }
+    .card .stage.dark { background: #020617; }
+    .card img, .card object { max-width: 86%; max-height: 112px; }
+    .card p { margin: 0; padding: 10px 12px 12px; font-size: 12px; color: #cbd5e1; }
+    .card b { display: block; color: white; font-weight: 500; margin-bottom: 2px; }
+    footer { margin-top: 22px; color: #64748b; font-size: 12px; }
+    @media (max-width: 800px) {
+      .preview-row, .grid { grid-template-columns: 1fr 1fr; }
+      header { flex-direction: column; align-items: start; }
+    }
+  </style>
 </head>
 <body>
   <div class="wrap">
-    <header class="site">
-      <a class="brand" href="#studio">
-        <div class="mark" aria-hidden="true"><span></span></div>
-        <div>
-          <b>Oriel</b>
-          <small>Pack studio</small>
+    <header>
+      <div>
+        <div class="brand-row">
+          <div class="mark">T</div>
+          <h1>Tomasik <span>Logo Maker Pro</span></h1>
         </div>
-      </a>
-      <nav class="nav">
-        <a href="#studio">Generator</a>
-        <a href="#inside">What’s inside</a>
-        <a href="#limits">File notes</a>
-      </nav>
-      <div class="pill">Runs in your browser</div>
+        <p class="lede">Upload the logo you already made. The brand name is used only to name the files. Seven placement SVGs are packed into one zip, with your image embedded and no type added.</p>
+      </div>
+      <div class="pill">Client-side · GitHub Pages</div>
     </header>
 
-    <section class="hero">
-      <div>
-        <p class="kicker">Logo sizer & asset pack generator</p>
-        <h1>Every version,<br />one <em>zip</em>.</h1>
-        <p class="lede">Upload the logo you already made. Oriel crops it to the artwork, builds full-colour, inverse, black, and white versions, then scales and sorts them into a client-ready package for screens and print.</p>
+    <section class="panel">
+      <div class="drop" id="drop">
+        <div>
+          <strong>Drop a PNG or JPG</strong>
+          <span>or click to choose the raster logo</span>
+        </div>
+        <input id="file" type="file" accept="image/png,image/jpeg,.png,.jpg,.jpeg" />
       </div>
-      <div class="hero-note">
-        <strong>Nothing is uploaded.</strong>
-        Cropping, recoloring, PDF guide, and the zip are made on this device. Drop original AI, EPS, or SVG files into the source slot if you want them copied into the pack untouched.
-      </div>
-    </section>
 
-    <section class="studio" id="studio">
-      <aside class="panel">
-        <div class="panel-head">
-          <h2>Identity</h2>
-          <p class="hint">Used for file names, the guide, and the social plates.</p>
+      <div class="preview-row" id="previewRow">
+        <div class="shot"><img id="preview" alt="Uploaded logo preview" /></div>
+        <div>
+          <label for="brand">Brand name <span style="color:#94a3b8">— file names only</span></label>
+          <input id="brand" type="text" placeholder="Northline" maxlength="48" />
+          <p class="note">Spaces become underscores. This text is never written into the SVG.</p>
+          <button class="download" id="download" disabled>Download ultimate logo package</button>
+          <div class="status" id="status"></div>
         </div>
-        <div class="block">
-          <label class="field">
-            <span>Brand name</span>
-            <input id="brandName" type="text" value="Northline" maxlength="48" />
-          </label>
-          <label class="field">
-            <span>Primary colour</span>
-            <div class="color-row">
-              <input id="brandColor" type="color" value="#1f3b31" />
-              <input id="brandHex" type="text" value="#1f3b31" maxlength="7" />
-            </div>
-          </label>
-          <label class="field">
-            <span>Clear space <b id="clearLabel">8%</b></span>
-            <input id="clearSpace" type="range" min="0" max="20" value="8" />
-          </label>
-          <label class="check">
-            <input id="keyWhite" type="checkbox" />
-            <span>Lift a near-white background so PNG files stay transparent.</span>
-          </label>
-          <label class="field">
-            <span>JPG background</span>
-            <select id="jpgBg">
-              <option value="white">White</option>
-              <option value="black">Black</option>
-              <option value="brand">Primary colour</option>
-            </select>
-          </label>
-          <label class="check">
-            <input id="includeSocial" type="checkbox" checked />
-            <span>Include favicons, app icons, and social plates.</span>
-          </label>
-          <label class="check">
-            <input id="includePrint" type="checkbox" checked />
-            <span>Include print PDFs with CMYK notes and a Pantone folder.</span>
-          </label>
-          <label class="check">
-            <input id="include4k" type="checkbox" checked />
-            <span>Include a 3840px master PNG for 4K screens.</span>
-          </label>
-        </div>
-
-        <div class="block">
-          <h2>Artwork</h2>
-          <p class="hint">Primary is required. Horizontal, brandmark, and wordmark are optional lockups — Oriel will not invent a new layout from a single file.</p>
-          <label class="field">
-            <span>Primary logo <i class="req">Required</i></span>
-            <div class="drop" data-slot="primary">
-              <div class="ph">PNG</div>
-              <div><b>Drop primary logo</b><p>PNG, JPG, WEBP, or SVG</p></div>
-              <input type="file" accept="image/png,image/jpeg,image/webp,image/svg+xml,.png,.jpg,.jpeg,.webp,.svg" />
-            </div>
-          </label>
-          <label class="field">
-            <span>Horizontal</span>
-            <div class="drop" data-slot="horizontal">
-              <div class="ph">OPT</div>
-              <div><b>Landscape lockup</b><p>Used for headers and nav</p></div>
-              <input type="file" accept="image/png,image/jpeg,image/webp,image/svg+xml,.png,.jpg,.jpeg,.webp,.svg" />
-            </div>
-          </label>
-          <label class="field">
-            <span>Brandmark / icon</span>
-            <div class="drop" data-slot="icon">
-              <div class="ph">OPT</div>
-              <div><b>Symbol only</b><p>Favicons use this if supplied</p></div>
-              <input type="file" accept="image/png,image/jpeg,image/webp,image/svg+xml,.png,.jpg,.jpeg,.webp,.svg" />
-            </div>
-          </label>
-          <label class="field">
-            <span>Wordmark</span>
-            <div class="drop" data-slot="wordmark">
-              <div class="ph">OPT</div>
-              <div><b>Type only</b><p>For tight horizontal spaces</p></div>
-              <input type="file" accept="image/png,image/jpeg,image/webp,image/svg+xml,.png,.jpg,.jpeg,.webp,.svg" />
-            </div>
-          </label>
-          <label class="field">
-            <span>Original vectors</span>
-            <div class="drop" data-slot="sources">
-              <div class="ph">AI</div>
-              <div><b>AI, EPS, SVG, PDF</b><p>Copied into 00 Source Files</p></div>
-              <input type="file" multiple accept=".ai,.eps,.svg,.pdf,application/pdf,image/svg+xml" />
-            </div>
-          </label>
-        </div>
-      </aside>
-
-      <div class="panel stage">
-        <h2>Stage</h2>
-        <p class="hint" id="stageHint">The crop follows opaque pixels, then adds the clear-space margin before scaling.</p>
-        <div class="frame" id="frame">
-          <div class="empty-stage" id="emptyStage">
-            <strong>Waiting for a mark.</strong>
-            Drop a logo on the left. You’ll see the crop, the four colourways, and the folder map before anything downloads.
-          </div>
-          <img id="masterPreview" alt="" hidden />
-        </div>
-        <div class="variants" id="variants" hidden>
-          <div class="variant light"><img alt="Full colour" /><span>Full colour</span></div>
-          <div class="variant dark"><img alt="Inverse" /><span>Inverse</span></div>
-          <div class="variant light"><img alt="Black" /><span>Black</span></div>
-          <div class="variant dark"><img alt="White" /><span>White</span></div>
-        </div>
-        <div class="meta-row" id="metaRow" hidden></div>
-        <div class="tree" id="tree" aria-label="Package map"></div>
-        <div class="actions">
-          <button class="primary" id="generate" disabled>Build logo package</button>
-          <button class="ghost" id="reset" type="button">Reset</button>
-        </div>
-        <div class="progress" id="progress">
-          <div class="bar"><div id="barFill"></div></div>
-          <p id="progressLabel">Preparing files…</p>
-        </div>
-        <div class="result" id="result"></div>
       </div>
     </section>
 
-    <section class="explain" id="inside">
-      <p class="kicker">Package anatomy</p>
-      <h2>What the zip is for.</h2>
-      <p class="lede">A logo package is the organized set of versions, colourways, and formats so the mark stays sharp on a stamp, a screen, or a billboard. Oriel follows a client-friendly folder order: variation, then purpose, then colour, then file type.</p>
-      <div class="grid-3">
-        <article class="card">
-          <h3>Variations</h3>
-          <p>One drawing rarely covers every placement. Supply the lockups you actually designed.</p>
-          <ul>
-            <li>Primary — the main logo</li>
-            <li>Horizontal — headers and web nav</li>
-            <li>Brandmark — symbol for avatars and swag</li>
-            <li>Wordmark — type when the icon is too small</li>
-          </ul>
-        </article>
-        <article class="card">
-          <h3>Colourways</h3>
-          <p>Full colour is not enough. The pack always builds four treatments from each uploaded lockup.</p>
-          <ul>
-            <li>Full colour on light grounds</li>
-            <li>Inverse — colour-reversed for dark grounds</li>
-            <li>Solid black for one-colour print</li>
-            <li>Solid white knockout for dark or photo grounds</li>
-          </ul>
-        </article>
-        <article class="card">
-          <h3>Formats</h3>
-          <p>Raster files are pixels. Vector files are paths. Both belong in the handoff, for different jobs.</p>
-          <ul>
-            <li>PNG — transparency, web, social</li>
-            <li>JPG — flat previews, no transparency</li>
-            <li>SVG & PDF — placement files that scale</li>
-            <li>AI & EPS — only if you drop the originals</li>
-          </ul>
-        </article>
-      </div>
-      <div class="grid-2" id="limits">
-        <article class="card">
-          <h3>Digital and print folders</h3>
-          <p class="path">01 Digital / 02 Print</p>
-          <p>Digital holds RGB images and placement vectors: PNG, JPG, SVG, and PDF. Print holds PDF artwork plus a colour note. CMYK values are process approximations from the uploaded pixels. The Pantone folder explains spot colour and lists those approximations — it does not invent a Pantone code.</p>
-        </article>
-        <article class="card">
-          <h3>Sizes included</h3>
-          <p>Longest edge at 512, 1024, and 1920, plus a 3840 master when enabled. Favicons at 16–512, Apple touch 180, Android 192/512, and plates for X, LinkedIn, YouTube, Instagram, and a 1200×630 link card. A PDF file guide sits at the root of the zip.</p>
-        </article>
-      </div>
-    </section>
-
-    <footer>
-      <div>Oriel pack studio · files stay on this device</div>
-      <div>RGB for screens · CMYK notes for press</div>
-    </footer>
+    <div class="grid" id="grid"></div>
+    <footer>Seven SVGs · primary, horizontal, tight icon, social safe area, black, white, favicon · packed with JSZip.</footer>
   </div>
-  <script src="vendor/jszip.min.js"></script>
-  <script src="vendor/jspdf.umd.min.js"></script>
-  <script src="app.js"></script>
+
+  <script>
+    const drop = document.getElementById("drop");
+    const fileInput = document.getElementById("file");
+    const previewRow = document.getElementById("previewRow");
+    const preview = document.getElementById("preview");
+    const brandInput = document.getElementById("brand");
+    const downloadBtn = document.getElementById("download");
+    const status = document.getElementById("status");
+    const grid = document.getElementById("grid");
+    let dataUrl = "";
+
+    function fileName(raw) {
+      const cleaned = String(raw || "Logo").trim().replace(/\s+/g, "_").replace(/[^\w\-]/g, "");
+      return cleaned || "Logo";
+    }
+
+    function svgDoc(viewBox, inner) {
+      return `<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" viewBox="${viewBox}" width="${viewBox.split(" ")[2]}" height="${viewBox.split(" ")[3]}">
+${inner}
+</svg>`;
+    }
+
+    function imageTag(x, y, w, h, filter) {
+      const filterAttr = filter ? ` filter="url(#${filter})"` : "";
+      return `  <image href="${dataUrl}" xlink:href="${dataUrl}" x="${x}" y="${y}" width="${w}" height="${h}" preserveAspectRatio="xMidYMid meet"${filterAttr}/>`;
+    }
+
+    function buildSuite(name) {
+      const blackFilter = `  <filter id="toBlack" color-interpolation-filters="sRGB">
+    <feColorMatrix type="matrix" values="0 0 0 0 0  0 0 0 0 0  0 0 0 0 0  0 0 0 1 0"/>
+  </filter>`;
+      const whiteFilter = `  <filter id="toWhite" color-interpolation-filters="sRGB">
+    <feColorMatrix type="matrix" values="0 0 0 0 1  0 0 0 0 1  0 0 0 0 1  0 0 0 1 0"/>
+  </filter>`;
+      return [
+        {
+          file: `1_${name}_Primary_FullColor.svg`,
+          title: "Primary",
+          detail: "500 × 500, image 400 centered",
+          svg: svgDoc("0 0 500 500", imageTag(50, 50, 400, 400))
+        },
+        {
+          file: `2_${name}_Horizontal_FullColor.svg`,
+          title: "Horizontal",
+          detail: "800 × 200 navbar frame",
+          svg: svgDoc("0 0 800 200", imageTag(20, 20, 760, 160))
+        },
+        {
+          file: `3_${name}_Icon_Tight.svg`,
+          title: "Icon tight",
+          detail: "500 × 500 edge to edge",
+          svg: svgDoc("0 0 500 500", imageTag(0, 0, 500, 500))
+        },
+        {
+          file: `4_${name}_Social_Profile.svg`,
+          title: "Social profile",
+          detail: "600 × 600, image 440 centered",
+          svg: svgDoc("0 0 600 600", imageTag(80, 80, 440, 440))
+        },
+        {
+          file: `5_${name}_Primary_Black_Utility.svg`,
+          title: "Black utility",
+          detail: "Forced pure black",
+          svg: svgDoc("0 0 500 500", blackFilter + "\n" + imageTag(50, 50, 400, 400, "toBlack"))
+        },
+        {
+          file: `6_${name}_Primary_White_Utility.svg`,
+          title: "White utility",
+          detail: "Pure white on a dark plate",
+          dark: true,
+          svg: svgDoc("0 0 500 500", `  <rect width="500" height="500" fill="#0f172a"/>\n` + whiteFilter + "\n" + imageTag(50, 50, 400, 400, "toWhite"))
+        },
+        {
+          file: `7_${name}_Favicon.svg`,
+          title: "Favicon",
+          detail: "64 × 64 image only",
+          svg: svgDoc("0 0 64 64", imageTag(0, 0, 64, 64))
+        }
+      ];
+    }
+
+    function renderPreviews() {
+      const name = fileName(brandInput.value);
+      const suite = buildSuite(name);
+      grid.classList.add("show");
+      grid.innerHTML = suite.map((item) => {
+        const url = URL.createObjectURL(new Blob([item.svg], { type: "image/svg+xml" }));
+        return `<article class="card"><div class="stage${item.dark ? " dark" : ""}"><img src="${url}" alt="${item.title} preview"></div><p><b>${item.title}</b>${item.detail}</p></article>`;
+      }).join("");
+    }
+
+    function readFile(file) {
+      if (!file || !/^image\/(png|jpeg)$/.test(file.type)) {
+        status.textContent = "Use a PNG or JPG.";
+        return;
+      }
+      const reader = new FileReader();
+      reader.onload = () => {
+        dataUrl = reader.result;
+        preview.src = dataUrl;
+        previewRow.classList.add("show");
+        downloadBtn.disabled = false;
+        status.textContent = "Image captured. Name the brand, then download.";
+        renderPreviews();
+      };
+      reader.onerror = () => { status.textContent = "Could not read that file."; };
+      reader.readAsDataURL(file);
+    }
+
+    drop.addEventListener("dragover", (event) => {
+      event.preventDefault();
+      drop.classList.add("over");
+    });
+    drop.addEventListener("dragleave", () => drop.classList.remove("over"));
+    drop.addEventListener("drop", (event) => {
+      event.preventDefault();
+      drop.classList.remove("over");
+      readFile(event.dataTransfer.files[0]);
+    });
+    fileInput.addEventListener("change", () => readFile(fileInput.files[0]));
+    brandInput.addEventListener("input", () => { if (dataUrl) renderPreviews(); });
+
+    downloadBtn.addEventListener("click", async () => {
+      if (!dataUrl || typeof JSZip === "undefined") {
+        status.textContent = "Upload a logo first. JSZip must load from the CDN.";
+        return;
+      }
+      const name = fileName(brandInput.value);
+      downloadBtn.disabled = true;
+      status.textContent = "Building seven SVGs…";
+      try {
+        const suite = buildSuite(name);
+        const zip = new JSZip();
+        suite.forEach((item) => zip.file(item.file, item.svg));
+        const blob = await zip.generateAsync({ type: "blob" });
+        const url = URL.createObjectURL(blob);
+        const link = document.createElement("a");
+        link.href = url;
+        link.download = `${name}_UltimateLogoPackage.zip`;
+        document.body.appendChild(link);
+        link.click();
+        link.remove();
+        setTimeout(() => URL.revokeObjectURL(url), 2000);
+        status.textContent = `Downloaded ${name}_UltimateLogoPackage.zip`;
+      } catch (err) {
+        status.textContent = err.message || "Could not build the zip.";
+      }
+      downloadBtn.disabled = false;
+    });
+  </script>
 </body>
 </html>

@@ -1,7 +1,7 @@
-# Tomasik Logo Maker
+# Tomasik Logo Maker Pro
 
-Browser studio that crops, scales, and packs an uploaded logo into a client zip.
+Single-file browser app. Upload a PNG or JPG, name the brand, and download seven placement SVGs in one zip.
 
 Live page: https://maxmaseratii.github.io/TOMASIK-LOGO-MAKER/
 
-Open `index.html` locally, or use the GitHub Pages link above. Files are processed in the browser and are not uploaded.
+The brand name is used only for file names. The SVGs embed the uploaded image and do not add type.
