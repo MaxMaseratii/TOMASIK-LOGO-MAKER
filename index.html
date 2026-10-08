@@ -91,7 +91,18 @@
     .grid { display: none; grid-template-columns: repeat(4, 1fr); gap: 8px; margin-top: 10px; }
     .grid.show { display: grid; }
     .card { border: 1px solid var(--line); border-radius: 12px; overflow: hidden; background: #0b1220; }
-    .card .view { height: 108px; display: grid; place-items: center; }
+    .card .view {
+      height: 108px; display: grid; place-items: center;
+      background-color: #0b1220;
+      background-image:
+        linear-gradient(45deg, rgba(148,163,184,.18) 25%, transparent 25%),
+        linear-gradient(-45deg, rgba(148,163,184,.18) 25%, transparent 25%),
+        linear-gradient(45deg, transparent 75%, rgba(148,163,184,.18) 75%),
+        linear-gradient(-45deg, transparent 75%, rgba(148,163,184,.18) 75%);
+      background-size: 14px 14px;
+      background-position: 0 0, 0 7px, 7px -7px, -7px 0;
+    }
+    .card .view.dark { background-color: #020617; }
     .card img { max-width: 84%; max-height: 84px; }
     .card p { margin: 0; padding: 8px 8px 10px; font-size: 11px; color: #cbd5e1; }
     .card b { display: block; color: white; font-weight: 500; }
@@ -127,7 +138,7 @@
         <div class="block">
           <h2>Identity</h2>
           <label class="field"><span>Brand name</span><input id="brand" type="text" placeholder="Northline" maxlength="48" /></label>
-          <p class="hint">Spaces become underscores. This text is never written into an SVG.</p>
+          <p class="hint">Background is lifted so black, white, and custom files stay transparent. The favicon is cropped to the symbol; letters sitting outside it are dropped. Letters inside the mark stay.</p>
           <label class="field">
             <span>Custom utility colour</span>
             <div class="color-row">
@@ -172,7 +183,7 @@
 
       <div class="panel stage">
         <h2>Stage</h2>
-        <p class="hint">Previews are the files that will be packed. Favicon uses the symbol slot when you give it one.</p>
+        <p class="hint">Black and white are the logo itself on a clear background, not a filled square. The favicon card is the extracted symbol.</p>
         <div class="frame">
           <div class="empty" id="empty"><strong>Waiting for a mark.</strong>Drop the logo you already made. Add a symbol without type if the favicon should not include the word.</div>
           <img id="master" alt="" hidden />
@@ -198,7 +209,7 @@
     const empty = document.getElementById("empty");
     const master = document.getElementById("master");
     const grid = document.getElementById("grid");
-    const slots = { primary: "", symbol: "" };
+    const slots = { primary: "", symbol: "", prepared: null };
 
     function fileName(raw) {
       return (String(raw || "Logo").trim().replace(/\s+/g, "_").replace(/[^\w\-]/g, "") || "Logo");
@@ -207,8 +218,8 @@
       const h = String(value || "#6366f1").replace("#", "");
       const full = h.length === 3 ? h.split("").map((c) => c + c).join("") : h;
       const n = parseInt(full, 16);
-      if (Number.isNaN(n) || full.length !== 6) return { r: 0.39, g: 0.4, b: 0.95, hex: "#6366f1" };
-      return { r: ((n >> 16) & 255) / 255, g: ((n >> 8) & 255) / 255, b: (n & 255) / 255, hex: "#" + full };
+      if (Number.isNaN(n) || full.length !== 6) return { r: 99, g: 102, b: 241, hex: "#6366f1" };
+      return { r: (n >> 16) & 255, g: (n >> 8) & 255, b: n & 255, hex: "#" + full };
     }
     function bindColor(picker, field) {
       picker.addEventListener("input", () => { field.value = picker.value; refresh(); });
@@ -220,57 +231,221 @@
         }
       });
     }
-    function svgDoc(viewBox, inner) {
+    function loadImage(url) {
+      return new Promise((resolve, reject) => {
+        const img = new Image();
+        img.onload = () => resolve(img);
+        img.onerror = reject;
+        img.src = url;
+      });
+    }
+    function canvasFrom(img, maxEdge) {
+      const scale = Math.min(1, maxEdge / Math.max(img.width, img.height));
+      const canvas = document.createElement("canvas");
+      canvas.width = Math.max(1, Math.round(img.width * scale));
+      canvas.height = Math.max(1, Math.round(img.height * scale));
+      canvas.getContext("2d").drawImage(img, 0, 0, canvas.width, canvas.height);
+      return canvas;
+    }
+    function keyBackground(canvas) {
+      const ctx = canvas.getContext("2d", { willReadFrequently: true });
+      const { width, height } = canvas;
+      const image = ctx.getImageData(0, 0, width, height);
+      const d = image.data;
+      let transparent = 0;
+      for (let i = 3; i < d.length; i += 16) if (d[i] < 250) transparent++;
+      const alreadyClear = transparent > (d.length / 16) * 0.04;
+      const corners = [0, (width - 1) * 4, (height - 1) * width * 4, ((height - 1) * width + width - 1) * 4];
+      const bg = corners.reduce((acc, i) => ({ r: acc.r + d[i], g: acc.g + d[i + 1], b: acc.b + d[i + 2] }), { r: 0, g: 0, b: 0 });
+      bg.r /= 4; bg.g /= 4; bg.b /= 4;
+      if (!alreadyClear) {
+        for (let i = 0; i < d.length; i += 4) {
+          const dr = d[i] - bg.r, dg = d[i + 1] - bg.g, db = d[i + 2] - bg.b;
+          const dist = Math.sqrt(dr * dr + dg * dg + db * db);
+          const white = d[i] > 242 && d[i + 1] > 242 && d[i + 2] > 242;
+          if (white || dist < 28) d[i + 3] = 0;
+          else if (dist < 48) d[i + 3] = Math.round(d[i + 3] * ((dist - 28) / 20));
+        }
+      }
+      ctx.putImageData(image, 0, 0);
+      return image;
+    }
+    function trimCanvas(canvas, padRatio) {
+      const ctx = canvas.getContext("2d", { willReadFrequently: true });
+      const { width, height } = canvas;
+      const d = ctx.getImageData(0, 0, width, height).data;
+      let minX = width, minY = height, maxX = 0, maxY = 0, hit = false;
+      for (let y = 0; y < height; y++) {
+        for (let x = 0; x < width; x++) {
+          if (d[(y * width + x) * 4 + 3] > 16) {
+            hit = true;
+            if (x < minX) minX = x;
+            if (y < minY) minY = y;
+            if (x > maxX) maxX = x;
+            if (y > maxY) maxY = y;
+          }
+        }
+      }
+      if (!hit) return canvas;
+      const longest = Math.max(maxX - minX, maxY - minY);
+      const pad = Math.round(longest * padRatio);
+      const out = document.createElement("canvas");
+      out.width = maxX - minX + 1 + pad * 2;
+      out.height = maxY - minY + 1 + pad * 2;
+      out.getContext("2d").drawImage(canvas, minX, minY, maxX - minX + 1, maxY - minY + 1, pad, pad, maxX - minX + 1, maxY - minY + 1);
+      return out;
+    }
+    function recolor(canvas, rgb) {
+      const out = document.createElement("canvas");
+      out.width = canvas.width;
+      out.height = canvas.height;
+      const ctx = out.getContext("2d", { willReadFrequently: true });
+      ctx.drawImage(canvas, 0, 0);
+      const image = ctx.getImageData(0, 0, out.width, out.height);
+      const d = image.data;
+      for (let i = 0; i < d.length; i += 4) {
+        if (d[i + 3] < 8) { d[i + 3] = 0; continue; }
+        d[i] = rgb[0]; d[i + 1] = rgb[1]; d[i + 2] = rgb[2];
+      }
+      ctx.putImageData(image, 0, 0);
+      return out.toDataURL("image/png");
+    }
+    function invert(canvas) {
+      const out = document.createElement("canvas");
+      out.width = canvas.width;
+      out.height = canvas.height;
+      const ctx = out.getContext("2d", { willReadFrequently: true });
+      ctx.drawImage(canvas, 0, 0);
+      const image = ctx.getImageData(0, 0, out.width, out.height);
+      const d = image.data;
+      for (let i = 0; i < d.length; i += 4) {
+        if (d[i + 3] < 8) { d[i + 3] = 0; continue; }
+        d[i] = 255 - d[i]; d[i + 1] = 255 - d[i + 1]; d[i + 2] = 255 - d[i + 2];
+      }
+      ctx.putImageData(image, 0, 0);
+      return out.toDataURL("image/png");
+    }
+    function extractSymbol(canvas) {
+      const max = 280;
+      const scale = Math.min(1, max / Math.max(canvas.width, canvas.height));
+      const w = Math.max(1, Math.round(canvas.width * scale));
+      const h = Math.max(1, Math.round(canvas.height * scale));
+      const small = document.createElement("canvas");
+      small.width = w; small.height = h;
+      const sctx = small.getContext("2d", { willReadFrequently: true });
+      sctx.drawImage(canvas, 0, 0, w, h);
+      const data = sctx.getImageData(0, 0, w, h).data;
+      const mask = new Uint8Array(w * h);
+      for (let i = 0; i < w * h; i++) mask[i] = data[i * 4 + 3] > 30 ? 1 : 0;
+      const labels = new Int32Array(w * h);
+      const boxes = [];
+      let current = 0;
+      const stack = [];
+      for (let i = 0; i < mask.length; i++) {
+        if (!mask[i] || labels[i]) continue;
+        current++;
+        let minX = w, minY = h, maxX = 0, maxY = 0, area = 0, sx = 0, sy = 0;
+        stack.push(i);
+        labels[i] = current;
+        while (stack.length) {
+          const p = stack.pop();
+          const x = p % w, y = (p / w) | 0;
+          area++; sx += x; sy += y;
+          if (x < minX) minX = x; if (y < minY) minY = y;
+          if (x > maxX) maxX = x; if (y > maxY) maxY = y;
+          const n = [p - 1, p + 1, p - w, p + w];
+          for (const q of n) {
+            if (q < 0 || q >= mask.length || labels[q] || !mask[q]) continue;
+            if ((p % w === 0 && q === p - 1) || (p % w === w - 1 && q === p + 1)) continue;
+            labels[q] = current;
+            stack.push(q);
+          }
+        }
+        if (area > 12) boxes.push({ minX, minY, maxX, maxY, area, cx: sx / area, cy: sy / area, h: maxY - minY + 1 });
+      }
+      if (!boxes.length) return canvas;
+      boxes.sort((a, b) => b.area - a.area);
+      const text = [];
+      boxes.forEach((box) => {
+        const peers = boxes.filter((other) => other !== box && Math.abs(other.cy - box.cy) < box.h * 0.45 && other.h < box.h * 1.45 && other.h > box.h * 0.55);
+        if (peers.length >= 2 && box.area < boxes[0].area * 0.55) text.push(box);
+      });
+      const textIds = new Set(text);
+      let symbol = boxes.filter((box) => !textIds.has(box));
+      if (!symbol.length) symbol = [boxes[0]];
+      const textMinX = text.length ? Math.min(...text.map((b) => b.minX)) : w;
+      const leftish = symbol.filter((b) => b.cx < textMinX - 4);
+      const chosen = leftish.length ? leftish : symbol;
+      let minX = w, minY = h, maxX = 0, maxY = 0;
+      chosen.forEach((b) => {
+        minX = Math.min(minX, b.minX); minY = Math.min(minY, b.minY);
+        maxX = Math.max(maxX, b.maxX); maxY = Math.max(maxY, b.maxY);
+      });
+      const wide = (maxX - minX) > (maxY - minY) * 1.8 && !leftish.length;
+      if (wide) maxX = minX + (maxY - minY);
+      const inv = 1 / scale;
+      const crop = document.createElement("canvas");
+      const sx = Math.max(0, Math.floor(minX * inv));
+      const sy = Math.max(0, Math.floor(minY * inv));
+      const sw = Math.min(canvas.width - sx, Math.ceil((maxX - minX + 1) * inv));
+      const sh = Math.min(canvas.height - sy, Math.ceil((maxY - minY + 1) * inv));
+      crop.width = sw; crop.height = sh;
+      crop.getContext("2d").drawImage(canvas, sx, sy, sw, sh, 0, 0, sw, sh);
+      return trimCanvas(crop, 0.04);
+    }
+    function svgDoc(viewBox, href, x, y, w, h) {
       const parts = viewBox.split(" ");
-      return `<?xml version="1.0" encoding="UTF-8"?>\n<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" viewBox="${viewBox}" width="${parts[2]}" height="${parts[3]}">\n${inner}\n</svg>`;
-    }
-    function imageTag(href, x, y, w, h, filter) {
-      const filterAttr = filter ? ` filter="url(#${filter})"` : "";
-      return `  <image href="${href}" xlink:href="${href}" x="${x}" y="${y}" width="${w}" height="${h}" preserveAspectRatio="xMidYMid meet"${filterAttr}/>`;
-    }
-    function solidFilter(id, r, g, b) {
-      return `  <filter id="${id}" color-interpolation-filters="sRGB"><feColorMatrix type="matrix" values="0 0 0 0 ${r}  0 0 0 0 ${g}  0 0 0 0 ${b}  0 0 0 1 0"/></filter>`;
-    }
-    function inverseFilter() {
-      return `  <filter id="toInverse" color-interpolation-filters="sRGB"><feColorMatrix type="matrix" values="-1 0 0 0 1  0 -1 0 0 1  0 0 -1 0 1  0 0 0 1 0"/></filter>`;
+      return `<?xml version="1.0" encoding="UTF-8"?>\n<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" viewBox="${viewBox}" width="${parts[2]}" height="${parts[3]}">\n  <image href="${href}" xlink:href="${href}" x="${x}" y="${y}" width="${w}" height="${h}" preserveAspectRatio="xMidYMid meet"/>\n</svg>`;
     }
     function buildSuite() {
       const name = fileName(brand.value);
-      const logo = slots.primary;
-      const symbol = slots.symbol || logo;
-      const social = slots.symbol && useSymbolSocial.checked ? slots.symbol : logo;
+      const art = slots.prepared;
+      const logo = art.full;
+      const symbol = slots.symbol || art.symbol;
+      const social = slots.symbol && useSymbolSocial.checked ? slots.symbol : art.symbol;
       const inset = Number(pad.value);
       const size = 500 - inset * 2;
-      const plateColor = hexParts(plateHex.value).hex;
       const tintColor = hexParts(tintHex.value);
       const files = [
-        { file: `1_${name}_Primary_FullColor.svg`, title: "Primary", detail: "Full colour, padded", svg: svgDoc("0 0 500 500", imageTag(logo, inset, inset, size, size)) },
-        { file: `2_${name}_Horizontal_FullColor.svg`, title: "Horizontal", detail: "800 × 200 navbar", svg: svgDoc("0 0 800 200", imageTag(logo, 20, 20, 760, 160)) },
-        { file: `3_${name}_Icon_Tight.svg`, title: "Icon tight", detail: "Edge to edge", svg: svgDoc("0 0 500 500", imageTag(logo, 0, 0, 500, 500)) },
-        { file: `4_${name}_Social_Profile.svg`, title: "Social", detail: slots.symbol && useSymbolSocial.checked ? "Symbol, avatar safe" : "Avatar safe area", svg: svgDoc("0 0 600 600", imageTag(social, 80, 80, 440, 440)) },
-        { file: `5_${name}_Primary_Black_Utility.svg`, title: "Black", detail: "Pure black knockout", svg: svgDoc("0 0 500 500", solidFilter("toBlack", 0, 0, 0) + "\n" + imageTag(logo, inset, inset, size, size, "toBlack")) },
-        { file: `6_${name}_Primary_White_Utility.svg`, title: "White", detail: "White on plate", dark: true, svg: svgDoc("0 0 500 500", `  <rect width="500" height="500" fill="${plateColor}"/>\n` + solidFilter("toWhite", 1, 1, 1) + "\n" + imageTag(logo, inset, inset, size, size, "toWhite")) },
-        { file: `7_${name}_Favicon.svg`, title: "Favicon", detail: slots.symbol ? "Symbol only, no letters" : "From primary", svg: svgDoc("0 0 64 64", imageTag(symbol, 0, 0, 64, 64)) }
+        { file: `1_${name}_Primary_FullColor.svg`, title: "Primary", detail: "Clear background", svg: svgDoc("0 0 500 500", logo, inset, inset, size, size) },
+        { file: `2_${name}_Horizontal_FullColor.svg`, title: "Horizontal", detail: "800 × 200 navbar", svg: svgDoc("0 0 800 200", logo, 20, 20, 760, 160) },
+        { file: `3_${name}_Icon_Tight.svg`, title: "Icon tight", detail: "Symbol, edge to edge", svg: svgDoc("0 0 500 500", symbol, 0, 0, 500, 500) },
+        { file: `4_${name}_Social_Profile.svg`, title: "Social", detail: "Symbol inside avatar safe area", svg: svgDoc("0 0 600 600", social, 80, 80, 440, 440) },
+        { file: `5_${name}_Primary_Black_Utility.svg`, title: "Black", detail: "Black logo, transparent", svg: svgDoc("0 0 500 500", art.black, inset, inset, size, size) },
+        { file: `6_${name}_Primary_White_Utility.svg`, title: "White", detail: "White logo, transparent", dark: true, svg: svgDoc("0 0 500 500", art.white, inset, inset, size, size) },
+        { file: `7_${name}_Favicon.svg`, title: "Favicon", detail: "Symbol only, outside type removed", svg: svgDoc("0 0 64 64", symbol, 2, 2, 60, 60) }
       ];
-      if (includeTint.checked) {
-        files.push({ file: `8_${name}_Primary_Custom_Utility.svg`, title: "Custom", detail: tintColor.hex, svg: svgDoc("0 0 500 500", solidFilter("toTint", tintColor.r.toFixed(4), tintColor.g.toFixed(4), tintColor.b.toFixed(4)) + "\n" + imageTag(logo, inset, inset, size, size, "toTint")) });
-      }
-      if (includeInverse.checked) {
-        files.push({ file: `9_${name}_Primary_Inverse.svg`, title: "Inverse", detail: "Colours reversed", dark: true, svg: svgDoc("0 0 500 500", `  <rect width="500" height="500" fill="${plateColor}"/>\n` + inverseFilter() + "\n" + imageTag(logo, inset, inset, size, size, "toInverse")) });
-      }
+      if (includeTint.checked) files.push({ file: `8_${name}_Primary_Custom_Utility.svg`, title: "Custom", detail: tintColor.hex + " on clear", svg: svgDoc("0 0 500 500", recolor(art.canvas, [tintColor.r, tintColor.g, tintColor.b]), inset, inset, size, size) });
+      if (includeInverse.checked) files.push({ file: `9_${name}_Primary_Inverse.svg`, title: "Inverse", detail: "Reversed, transparent", dark: true, svg: svgDoc("0 0 500 500", art.inverse, inset, inset, size, size) });
       return files;
+    }
+    async function prepare(url, manualSymbol) {
+      const img = await loadImage(url);
+      const base = canvasFrom(img, 1400);
+      keyBackground(base);
+      const trimmed = trimCanvas(base, 0.02);
+      const symbolCanvas = manualSymbol ? trimCanvas(canvasFrom(await loadImage(manualSymbol), 800), 0.04) : extractSymbol(trimmed);
+      keyBackground(symbolCanvas);
+      return {
+        canvas: trimmed,
+        full: trimmed.toDataURL("image/png"),
+        black: recolor(trimmed, [0, 0, 0]),
+        white: recolor(trimmed, [255, 255, 255]),
+        inverse: invert(trimmed),
+        symbol: symbolCanvas.toDataURL("image/png")
+      };
     }
     function refresh() {
       padLabel.textContent = pad.value;
-      if (!slots.primary) return;
+      if (!slots.prepared) return;
       empty.hidden = true;
       master.hidden = false;
-      master.src = slots.primary;
+      master.src = slots.prepared.symbol;
       const suite = buildSuite();
       grid.classList.add("show");
       grid.innerHTML = suite.map((item) => {
         const url = URL.createObjectURL(new Blob([item.svg], { type: "image/svg+xml" }));
-        return `<article class="card"><div class="view" style="background:${item.dark ? "#020617" : "#0b1220"}"><img src="${url}" alt="${item.title}"></div><p><b>${item.title}</b>${item.detail}</p></article>`;
+        return `<article class="card"><div class="view${item.dark ? " dark" : ""}"><img src="${url}" alt="${item.title}"></div><p><b>${item.title}</b>${item.detail}</p></article>`;
       }).join("");
       downloadBtn.disabled = false;
     }
@@ -280,7 +455,7 @@
         return;
       }
       const reader = new FileReader();
-      reader.onload = () => {
+      reader.onload = async () => {
         slots[slot] = reader.result;
         let img = drop.querySelector("img");
         if (!img) {
@@ -290,8 +465,10 @@
         }
         img.src = reader.result;
         drop.querySelector("b").textContent = file.name;
-        drop.querySelector("p").textContent = Math.round(file.size / 1024) + " KB";
-        status.textContent = slot === "symbol" ? "Symbol captured for the favicon." : "Logo captured.";
+        if (!slots.primary) return;
+        status.textContent = "Lifting the background and extracting the symbol…";
+        slots.prepared = await prepare(slots.primary, slots.symbol);
+        status.textContent = slots.symbol ? "Using your symbol file for the favicon." : "Favicon cropped to the symbol. Outside letters removed.";
         refresh();
       };
       reader.readAsDataURL(file);
@@ -312,7 +489,7 @@
     bindColor(tint, tintHex);
     bindColor(plate, plateHex);
     downloadBtn.addEventListener("click", async () => {
-      if (!slots.primary || typeof JSZip === "undefined") {
+      if (!slots.prepared || typeof JSZip === "undefined") {
         status.textContent = "Upload a logo first.";
         return;
       }
